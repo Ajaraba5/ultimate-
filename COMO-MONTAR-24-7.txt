@@ -1,0 +1,157 @@
+═══════════════════════════════════════════════════════════════════
+  🚀 CÓMO MONTAR TU SISTEMA 24/7 EN INTERNET
+═══════════════════════════════════════════════════════════════════
+
+Tu sistema está funcionando localmente. Para tenerlo 24/7 en internet,
+necesitas subirlo a un servidor en la nube.
+
+
+══════════════════════════════════════════════════════════════════
+  📊 COMPARACIÓN DE OPCIONES
+══════════════════════════════════════════════════════════════════
+
+┌─────────────┬──────────┬──────────┬─────────────┬──────────────┐
+│ Plataforma  │ Tiempo   │ Costo    │ Siempre on  │ Facilidad    │
+├─────────────┼──────────┼──────────┼─────────────┼──────────────┤
+│ Railway     │ 15 min   │ Gratis*  │ ✅ Sí       │ ⭐⭐⭐⭐⭐    │
+│ Render      │ 15 min   │ Gratis   │ ⚠️  A veces │ ⭐⭐⭐⭐⭐    │
+│ Heroku      │ 20 min   │ $5-7/mes │ ✅ Sí       │ ⭐⭐⭐⭐      │
+│ VPS         │ 60 min   │ $5/mes   │ ✅ Sí       │ ⭐⭐          │
+└─────────────┴──────────┴──────────┴─────────────┴──────────────┘
+
+*Railway: $5 crédito gratis/mes (alcanza para estar 24/7)
+
+
+══════════════════════════════════════════════════════════════════
+  ⭐ OPCIÓN RECOMENDADA: RAILWAY
+══════════════════════════════════════════════════════════════════
+
+✅ La más fácil de todas
+✅ Gratis y siempre activo
+✅ No se "duerme"
+✅ PostgreSQL incluido
+✅ SSL/HTTPS automático
+✅ Auto-deploy (cada cambio se sube automáticamente)
+
+
+══════════════════════════════════════════════════════════════════
+  📋 PASOS RESUMIDOS (Railway)
+══════════════════════════════════════════════════════════════════
+
+1. 📦 PREPARAR TU CÓDIGO
+   - Ejecuta: EMPEZAR-DEPLOY-24-7.bat
+   - Elige opción 1 (Railway)
+
+2. 🌐 SUBIR A GITHUB
+   - Ve a: https://github.com/new
+   - Crea repo: "sistema-electoral"
+   - Copia los comandos que aparecen
+   - Pégalos en PowerShell
+
+3. 🚂 DEPLOYAR EN RAILWAY
+   - Ve a: https://railway.app
+   - Login con GitHub
+   - "Deploy from GitHub repo"
+   - Elige tu repo
+   - Agrega PostgreSQL
+   - Deploy!
+
+4. 🎯 CONFIGURAR
+   - Agrega variables de entorno
+   - Ejecuta: npm run setup-db
+   - ¡Listo!
+
+Tiempo total: 15-20 minutos
+
+
+══════════════════════════════════════════════════════════════════
+  🎯 INICIO RÁPIDO - EJECUTA ESTO AHORA
+══════════════════════════════════════════════════════════════════
+
+Doble click en:
+
+    📄 EMPEZAR-DEPLOY-24-7.bat
+
+O desde PowerShell:
+
+    .\EMPEZAR-DEPLOY-24-7.bat
+
+
+Eso iniciará Git y te guiará paso a paso.
+
+
+══════════════════════════════════════════════════════════════════
+  📚 GUÍAS DETALLADAS DISPONIBLES
+══════════════════════════════════════════════════════════════════
+
+📖 DEPLOY-RAILWAY-PASO-A-PASO.md  → Railway con screenshots
+📖 DEPLOY-RENDER-PASO-A-PASO.md   → Render alternativo
+📖 DEPLOYMENT.md                   → Todas las opciones (VPS, etc)
+📖 QUICK-DEPLOY.md                 → Comandos rápidos
+
+
+══════════════════════════════════════════════════════════════════
+  ❓ ¿QUÉ VOY A OBTENER?
+══════════════════════════════════════════════════════════════════
+
+Después de seguir los pasos tendrás:
+
+✅ Una URL pública como: https://tu-app.up.railway.app
+✅ Tu sistema accesible 24/7 desde cualquier lugar
+✅ Base de datos PostgreSQL en la nube
+✅ HTTPS (candado verde de seguridad)
+✅ Auto-deploy (cada cambio se sube automáticamente)
+✅ Logs y monitoreo en tiempo real
+
+
+══════════════════════════════════════════════════════════════════
+  🎁 BENEFICIOS DEL DEPLOY 24/7
+══════════════════════════════════════════════════════════════════
+
+✨ Acceso desde cualquier dispositivo y lugar
+✨ No necesitas dejar tu PC encendida
+✨ Velocidad profesional (servidores optimizados)
+✨ Backups automáticos
+✨ URL profesional (puedes agregar tu dominio)
+✨ Escalable (puedes agregar más recursos)
+
+
+══════════════════════════════════════════════════════════════════
+  🆘 ¿NECESITAS AYUDA?
+══════════════════════════════════════════════════════════════════
+
+Si tienes dudas durante el proceso:
+
+1. Lee las guías paso a paso (muy detalladas)
+2. Revisa la sección "Troubleshooting" en cada guía
+3. Los logs de Railway/Render te dirán qué salió mal
+
+
+══════════════════════════════════════════════════════════════════
+  🚀 ¿LISTO PARA EMPEZAR?
+══════════════════════════════════════════════════════════════════
+
+Ejecuta AHORA:
+
+    📄 EMPEZAR-DEPLOY-24-7.bat
+
+¡En 15 minutos tendrás tu sistema en línea 24/7! 🎉
+
+
+══════════════════════════════════════════════════════════════════
+  💡 NOTA IMPORTANTE
+══════════════════════════════════════════════════════════════════
+
+Cloudflare Tunnel (que usas ahora) es TEMPORAL:
+- Solo funciona mientras tu PC esté encendida
+- La URL cambia cada vez que reinicias
+- Es perfecto para demos rápidas
+
+Railway/Render es PERMANENTE:
+- Funciona 24/7 aunque apagues tu PC
+- URL fija que no cambia
+- Perfecto para uso real/producción
+
+¡Haz el cambio ahora! 🚀
+
+══════════════════════════════════════════════════════════════════

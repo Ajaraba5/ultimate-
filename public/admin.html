@@ -1,0 +1,1062 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Admin - Sistema Electoral v3.0.0</title>    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <meta name="description" content="Panel de administración del Sistema Electoral">    <link rel="stylesheet" href="/css/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
+</head>
+<body style="background: #F5F7FA;">
+    <!-- Navbar -->
+    <div class="navbar">
+        <div class="navbar-brand">
+            🏰 Panel Administrativo
+        </div>
+        <div class="navbar-user">
+            <span id="userName">Cargando...</span>
+            <button class="btn btn-danger" onclick="logout()">Cerrar Sesión</button>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="container-fluid">
+        <!-- Estadísticas Principales -->
+        <div class="row mt-2">
+            <div class="col-3">
+                <div class="stat-card">
+                    <h3 id="totalPersonas">0</h3>
+                    <p>👥 Total Registrados</p>
+                </div>
+            </div>
+            <div class="col-3">
+                <div class="stat-card success">
+                    <h3 id="totalVotados">0</h3>
+                    <p>✅ Total Votados</p>
+                </div>
+            </div>
+            <div class="col-3">
+                <div class="stat-card danger">
+                    <h3 id="totalPendientes">0</h3>
+                    <p>⏳ Total Pendientes</p>
+                </div>
+            </div>
+            <div class="col-3">
+                <div class="stat-card warning">
+                    <h3 id="porcentajeParticipacion">0%</h3>
+                    <p>📊 Participación</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabs de Navegación -->
+        <div class="card mt-2">
+            <div style="display: flex; gap: 10px; border-bottom: 2px solid #E0E0E0; padding-bottom: 10px;">
+                <button id="btnDashboard" class="btn btn-primary" onclick="showTab('dashboard')">📊 Dashboard</button>
+                <button id="btnPersonas" class="btn btn-secondary" onclick="showTab('personas')">👥 Personas</button>
+                <button id="btnContadores" class="btn btn-secondary" onclick="showTab('contadores')">📝 Contadores</button>
+                <button id="btnLideres" class="btn btn-secondary" onclick="showTab('lideres')">🎯 Líderes</button>
+                <button id="btnImport" class="btn btn-secondary" onclick="showTab('import')">📥 Importar/Exportar</button>
+            </div>
+        </div>
+
+        <!-- Tab: Dashboard -->
+        <div id="tabDashboard" class="tab-content">
+            <div class="row">
+                <div class="col-6">
+                    <div class="card">
+                        <div class="card-header">📊 Gráfica General por Partido</div>
+                        <div class="chart-container">
+                            <canvas id="chartGeneral"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="card">
+                        <div class="card-header">🎯 Top 5 Líderes</div>
+                        <div class="chart-container">
+                            <canvas id="chartLideres"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-6">
+                    <div class="card">
+                        <div class="card-header">📝 Rendimiento de Contadores</div>
+                        <div class="chart-container">
+                            <canvas id="chartContadores"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="card">
+                        <div class="card-header">📈 Participación Electoral</div>
+                        <div class="chart-container">
+                            <canvas id="chartParticipacion"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab: Personas -->
+        <div id="tabPersonas" class="tab-content d-none">
+            <div class="card">
+                <div class="card-header">👥 Lista de Personas</div>
+                <div class="card-body">
+                    <div class="row mb-2">
+                        <div class="col-6">
+                            <div class="input-group">
+                                <input type="text" id="searchPersonas" placeholder="Buscar por nombre o documento...">
+                                <button class="btn btn-primary" onclick="loadPersonas()">🔍 Buscar</button>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <select id="filterPartido" onchange="loadPersonas()">
+                                <option value="">Todos los partidos</option>
+                                <option value="ROJO">ROJO</option>
+                                <option value="VERDE">VERDE</option>
+                            </select>
+                        </div>
+                        <div class="col-3">
+                            <select id="filterVoto" onchange="loadPersonas()">
+                                <option value="">Todos</option>
+                                <option value="true">Votaron</option>
+                                <option value="false">Pendientes</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="overflow-x: auto;">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Nombre</th>
+                                    <th>Documento</th>
+                                    <th>Teléfono</th>
+                                    <th>Dirección</th>
+                                    <th>Barrio</th>
+                                    <th>Puesto Votación</th>
+                                    <th>Partido</th>
+                                    <th>Líder</th>
+                                    <th>Contador</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody id="personasTableBody">
+                                <tr><td colspan="10" class="text-center">Cargando...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab: Contadores -->
+        <div id="tabContadores" class="tab-content d-none">
+            <div class="card">
+                <div class="card-header">📝 Gestión de Contadores</div>
+                <div class="card-body">
+                    <button class="btn btn-success mb-2" onclick="showCreateContador()">➕ Crear Contador</button>
+                    <div style="overflow-x: auto;">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Nombre</th>
+                                    <th>Username</th>
+                                    <th>Asignados</th>
+                                    <th>Votados</th>
+                                    <th>Pendientes</th>
+                                    <th>Porcentaje</th>
+                                    <th>Último Login</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="contadoresTableBody">
+                                <tr><td colspan="8" class="text-center">Cargando...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab: Líderes -->
+        <div id="tabLideres" class="tab-content d-none">
+            <div class="card">
+                <div class="card-header">🎯 Gestión de Líderes</div>
+                <div class="card-body">
+                    <div class="input-group mb-2">
+                        <input type="text" id="searchLider" placeholder="Buscar líder por nombre...">
+                        <button class="btn btn-primary" onclick="filtrarLideres()">🔍 Filtrar</button>
+                        <button class="btn btn-secondary" onclick="cargarLideres()">🔄 Recargar</button>
+                    </div>
+                    <div id="lideresStats" class="mb-2" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;">
+                        <div class="stat-card">
+                            <h4 id="totalLideres">0</h4>
+                            <p>👥 Total Líderes</p>
+                        </div>
+                        <div class="stat-card danger">
+                            <h4 id="lideresRojo">0</h4>
+                            <p>🔴 Partido ROJO</p>
+                        </div>
+                        <div class="stat-card success">
+                            <h4 id="lideresVerde">0</h4>
+                            <p>🟢 Partido VERDE</p>
+                        </div>
+                        <div class="stat-card warning">
+                            <h4 id="totalPersonasLideres">0</h4>
+                            <p>📊 Total Personas</p>
+                        </div>
+                    </div>
+                    <div id="lideresResult">
+                        <p>Cargando líderes...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab: Import/Export -->
+        <div id="tabImport" class="tab-content d-none">
+            <div class="row">
+                <div class="col-6">
+                    <div class="card">
+                        <div class="card-header">� Importar Partido ROJO</div>
+                        <div class="card-body">
+                            <p>Sube Excel para Partido ROJO:</p>
+                            <p><small>Columnas necesarias:</small></p>
+                            <ul style="font-size: 0.85em;">
+                                <li><strong>NOMBRES Y APELLIDOS</strong> (obligatorio)</li>
+                                <li><strong>CEDULA DE CIUDADANIA</strong> (obligatorio)</li>
+                                <li>TELEFONO (opcional)</li>
+                                <li>DIRECCION (opcional)</li>
+                                <li>BARRIO (opcional)</li>
+                                <li>LIDER (opcional)</li>
+                                <li>PUESTO DE VOTACION (opcional)</li>
+                                <li>MESA (informativo)</li>
+                            </ul>
+                            <input type="file" id="excelFileRojo" accept=".xlsx,.xls" class="mb-2">
+                            <button class="btn btn-danger btn-block" onclick="importarExcel('ROJO')">🔴 Importar ROJO</button>
+                            <div id="importResultRojo" class="mt-2"></div>
+                        </div>
+                    </div>
+                    <div class="card mt-3">
+                        <div class="card-header">🟢 Importar Partido VERDE</div>
+                        <div class="card-body">
+                            <p>Sube Excel para Partido VERDE:</p>
+                            <p><small>Columnas necesarias:</small></p>
+                            <ul style="font-size: 0.85em;">
+                                <li><strong>NOMBRES Y APELLIDOS</strong> (obligatorio)</li>
+                                <li><strong>CEDULA DE CIUDADANIA</strong> (obligatorio)</li>
+                                <li>TELEFONO (opcional)</li>
+                                <li>DIRECCION (opcional)</li>
+                                <li>BARRIO (opcional)</li>
+                                <li>LIDER (opcional)</li>
+                                <li>PUESTO DE VOTACION (opcional)</li>
+                                <li>MESA (informativo)</li>
+                            </ul>
+                            <input type="file" id="excelFileVerde" accept=".xlsx,.xls" class="mb-2">
+                            <button class="btn btn-success btn-block" onclick="importarExcel('VERDE')">🟢 Importar VERDE</button>
+                            <div id="importResultVerde" class="mt-2"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="card">
+                        <div class="card-header">📤 Exportar Datos</div>
+                        <div class="card-body">
+                            <p>Exporta un archivo Excel completo con:</p>
+                            <ul>
+                                <li>✅ Base de datos general</li>
+                                <li>✅ Estadísticas generales</li>
+                                <li>✅ Datos por partido</li>
+                                <li>✅ Análisis de líderes</li>
+                                <li>✅ Rendimiento de contadores</li>
+                                <li>✅ Estadísticas de zonas</li>
+                                <li>✅ Resumen ejecutivo (9 hojas)</li>
+                            </ul>
+                            <button class="btn btn-success btn-block" onclick="exportarExcel()">📤 Exportar Todo</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        </div>
+    </div>
+
+    <!-- Modal Crear Contador -->
+    <div id="modalCrearContador" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3>➕ Crear Nuevo Contador</h3>
+                <button class="btn btn-sm" onclick="closeModalContador()" style="background: none; border: none; font-size: 1.5em; cursor: pointer;">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Nombre Completo:</label>
+                    <input type="text" id="contadorNombre" placeholder="Ej: Juan Pérez" required>
+                </div>
+                <div class="form-group">
+                    <label>Usuario (login):</label>
+                    <input type="text" id="contadorUsername" placeholder="Ej: jperez" required>
+                </div>
+                <div class="form-group">
+                    <label>Contraseña:</label>
+                    <input type="password" id="contadorPassword" placeholder="Mínimo 6 caracteres" required>
+                </div>
+                <div class="form-group">
+                    <label>Email (opcional):</label>
+                    <input type="email" id="contadorEmail" placeholder="ejemplo@email.com">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModalContador()">Cancelar</button>
+                <button class="btn btn-success" onclick="crearContador()">Crear Contador</button>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+        }
+        .modal-content {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            width: 90%;
+            max-width: 600px;
+        }
+        .modal-header {
+            padding: 20px;
+            border-bottom: 2px solid #E0E0E0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-header h3 {
+            margin: 0;
+        }
+        .modal-body {
+            padding: 20px;
+        }
+        .modal-footer {
+            padding: 20px;
+            border-top: 1px solid #E0E0E0;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #333;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 3px rgba(0,123,255,0.1);
+        }
+    </style>
+
+    <script>
+        const API_URL = window.location.origin;
+        let socket = null;
+        let charts = {};
+
+        // Inicializar al cargar
+        window.addEventListener('load', async () => {
+            await checkAuth();
+            await loadDashboard();
+            initializeWebSocket();
+            setInterval(loadDashboard, 10000); // Actualizar cada 10 segundos
+        });
+
+        async function checkAuth() {
+            const token = localStorage.getItem('token');
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+            if (!token || user.role !== 'admin') {
+                window.location.href = '/';
+                return;
+            }
+
+            document.getElementById('userName').textContent = user.nombreCompleto || user.username;
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            if (socket) socket.disconnect();
+            window.location.href = '/';
+        }
+
+        async function loadDashboard() {
+            try {
+                const response = await apiCall('/api/admin/dashboard');
+                if (response.success) {
+                    updateStats(response.data.stats);
+                    updateCharts(response.data);
+                }
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+            }
+        }
+
+        function updateStats(stats) {
+            document.getElementById('totalPersonas').textContent = stats.total_personas || 0;
+            document.getElementById('totalVotados').textContent = stats.total_votados || 0;
+            document.getElementById('totalPendientes').textContent = stats.total_pendientes || 0;
+            document.getElementById('porcentajeParticipacion').textContent = (stats.porcentaje_participacion || 0) + '%';
+        }
+
+        function updateCharts(data) {
+            // Gráfica General
+            const ctxGeneral = document.getElementById('chartGeneral').getContext('2d');
+            if (charts.general) charts.general.destroy();
+            charts.general = new Chart(ctxGeneral, {
+                type: 'pie',
+                data: {
+                    labels: ['Partido ROJO', 'Partido VERDE'],
+                    datasets: [{
+                        data: [data.stats.votados_rojo || 0, data.stats.votados_verde || 0],
+                        backgroundColor: ['#E74C3C', '#27AE60']
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+
+            // Gráfica de Líderes
+            const ctxLideres = document.getElementById('chartLideres').getContext('2d');
+            if (charts.lideres) charts.lideres.destroy();
+            charts.lideres = new Chart(ctxLideres, {
+                type: 'bar',
+                data: {
+                    labels: data.topLideres.map(l => l.nombre),
+                    datasets: [{
+                        label: 'Participación %',
+                        data: data.topLideres.map(l => l.porcentaje),
+                        backgroundColor: '#4472C4'
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+
+            // Gráfica de Contadores
+            const ctxContadores = document.getElementById('chartContadores').getContext('2d');
+            if (charts.contadores) charts.contadores.destroy();
+            charts.contadores = new Chart(ctxContadores, {
+                type: 'bar',
+                data: {
+                    labels: data.contadores.map(c => c.nombre_completo),
+                    datasets: [{
+                        label: 'Votados',
+                        data: data.contadores.map(c => c.total_votados),
+                        backgroundColor: '#27AE60'
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+
+            // Gráfica de Participación
+            const ctxParticipacion = document.getElementById('chartParticipacion').getContext('2d');
+            if (charts.participacion) charts.participacion.destroy();
+            charts.participacion = new Chart(ctxParticipacion, {
+                type: 'line',
+                data: {
+                    labels: data.zonas.map(z => z.nombre),
+                    datasets: [{
+                        label: 'Participación por Zona',
+                        data: data.zonas.map(z => z.porcentaje_participacion),
+                        borderColor: '#4472C4',
+                        backgroundColor: 'rgba(68, 114, 196, 0.1)',
+                        fill: true
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        }
+
+        function showTab(tab) {
+            console.log('Cambiando a tab:', tab);
+            
+            const tabs = ['dashboard', 'personas', 'contadores', 'lideres', 'import'];
+            
+            // Ocultar todos los tabs
+            tabs.forEach(t => {
+                const tabId = `tab${t.charAt(0).toUpperCase() + t.slice(1)}`;
+                const element = document.getElementById(tabId);
+                if (element) {
+                    element.classList.add('d-none');
+                }
+                
+                // Actualizar botones
+                const btnId = `btn${t.charAt(0).toUpperCase() + t.slice(1)}`;
+                const button = document.getElementById(btnId);
+                if (button) {
+                    button.classList.remove('btn-primary');
+                    button.classList.add('btn-secondary');
+                }
+            });
+
+            // Mostrar tab activo
+            const activeTabId = `tab${tab.charAt(0).toUpperCase() + tab.slice(1)}`;
+            const activeTab = document.getElementById(activeTabId);
+            if (activeTab) {
+                activeTab.classList.remove('d-none');
+                console.log('Tab mostrado:', activeTabId);
+            } else {
+                console.error('Tab no encontrado:', activeTabId);
+            }
+            
+            // Actualizar botón activo
+            const activeBtnId = `btn${tab.charAt(0).toUpperCase() + tab.slice(1)}`;
+            const activeButton = document.getElementById(activeBtnId);
+            if (activeButton) {
+                activeButton.classList.remove('btn-secondary');
+                activeButton.classList.add('btn-primary');
+            }
+
+            // Cargar datos específicos del tab
+            if (tab === 'personas') loadPersonas();
+            if (tab === 'contadores') loadContadores();
+            if (tab === 'lideres') cargarLideres();
+        }
+
+        async function loadPersonas() {
+            const search = document.getElementById('searchPersonas').value;
+            const partido = document.getElementById('filterPartido').value;
+            const voto = document.getElementById('filterVoto').value;
+
+            const params = new URLSearchParams();
+            if (search) params.append('search', search);
+            if (partido) params.append('partido', partido);
+            if (voto) params.append('voto', voto);
+
+            try {
+                // Cargar contadores primero
+                const contadoresResponse = await apiCall('/api/admin/contadores');
+                const contadores = contadoresResponse.success ? contadoresResponse.data : [];
+                
+                const response = await apiCall(`/api/admin/personas?${params}`);
+                if (response.success) {
+                    const tbody = document.getElementById('personasTableBody');
+                    tbody.innerHTML = response.data.personas.map(p => {
+                        // Crear opciones del selector de contador
+                        const contadorOptions = contadores.map(c => 
+                            `<option value="${c.id}" ${c.id === p.contador_id ? 'selected' : ''}>${c.nombre_completo || c.username}</option>`
+                        ).join('');
+                        
+                        return `
+                        <tr>
+                            <td>${p.nombre}</td>
+                            <td>${p.documento}</td>
+                            <td>${p.telefono || '-'}</td>
+                            <td style="max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${p.direccion || '-'}">${p.direccion || '-'}</td>
+                            <td>${p.zona_nombre || '-'}</td>
+                            <td>${p.lugar_votacion_nombre || '-'}</td>
+                            <td><span class="badge ${p.partido === 'ROJO' ? 'badge-danger' : 'badge-success'}">${p.partido}</span></td>
+                            <td>${p.lider_nombre || '-'}</td>
+                            <td>
+                                <select onchange="asignarContador(${p.id}, this.value)" style="padding: 5px; border-radius: 4px; border: 1px solid #ddd;">
+                                    ${contadorOptions}
+                                </select>
+                            </td>
+                            <td>${p.voto ? '<span class="badge badge-success">Votó</span>' : '<span class="badge badge-danger">Pendiente</span>'}</td>
+                        </tr>
+                    `}).join('') || '<tr><td colspan="10" class="text-center">No hay resultados</td></tr>';
+                }
+            } catch (error) {
+                console.error('Error loading personas:', error);
+            }
+        }
+        
+        async function asignarContador(personaId, contadorId) {
+            try {
+                const response = await apiCall(`/api/admin/personas/${personaId}`, {
+                    method: 'PUT',
+                    body: JSON.stringify({ contador_id: parseInt(contadorId) })
+                });
+                
+                if (response.success) {
+                    showToast('Contador asignado exitosamente', 'success');
+                } else {
+                    showToast('Error al asignar contador', 'error');
+                    loadPersonas(); // Recargar para revertir el cambio visual
+                }
+            } catch (error) {
+                console.error('Error asignando contador:', error);
+                showToast('Error al asignar contador', 'error');
+                loadPersonas();
+            }
+        }
+
+        async function loadContadores() {
+            try {
+                const response = await apiCall('/api/admin/contadores');
+                if (response.success) {
+                    const tbody = document.getElementById('contadoresTableBody');
+                    tbody.innerHTML = response.data.map(c => `
+                        <tr>
+                            <td>${c.nombre_completo}</td>
+                            <td>${c.username}</td>
+                            <td>${c.total_asignados}</td>
+                            <td>${c.total_votados}</td>
+                            <td>${c.total_pendientes}</td>
+                            <td>${c.porcentaje}%</td>
+                            <td>${c.ultimo_login ? new Date(c.ultimo_login).toLocaleString() : 'Nunca'}</td>
+                            <td>
+                                <button class="btn btn-danger btn-sm" onclick="eliminarContador(${c.id}, '${c.nombre_completo.replace(/'/g, "\\'")}')">🗑️ Eliminar</button>
+                            </td>
+                        </tr>
+                    `).join('') || '<tr><td colspan="8" class="text-center">No hay contadores</td></tr>';
+                }
+            } catch (error) {
+                console.error('Error loading contadores:', error);
+            }
+        }
+
+        async function buscarLider() {
+            const nombre = document.getElementById('searchLider').value;
+            if (!nombre) return;
+
+            try {
+                const response = await apiCall(`/api/admin/buscar-lider?nombre=${nombre}`);
+                if (response.success && response.data.lideres.length > 0) {
+                    const lider = response.data.lideres[0];
+                    document.getElementById('lideresResult').innerHTML = `
+                        <div class="card">
+                            <h3>${lider.nombre}</h3>
+                            <p>Partido: <span class="badge ${lider.partido === 'ROJO' ? 'badge-danger' : 'badge-success'}">${lider.partido}</span></p>
+                            <p>Total Asignados: ${lider.total_asignados}</p>
+                            <p>Total Votados: ${lider.total_votados} (${lider.porcentaje_participacion}%)</p>
+                        </div>
+                    `;
+                } else {
+                    document.getElementById('lideresResult').innerHTML = '<p>No se encontró el líder</p>';
+                }
+            } catch (error) {
+                console.error('Error buscando líder:', error);
+            }
+        }
+
+        // Variables globales para líderes
+        let todosLosLideres = [];
+        let lideresExpandidos = new Set();
+
+        async function cargarLideres() {
+            try {
+                const response = await apiCall('/api/admin/lideres');
+                if (response.success) {
+                    todosLosLideres = response.data.lideres;
+                    mostrarLideres(todosLosLideres);
+                    actualizarStatsLideres(todosLosLideres);
+                }
+            } catch (error) {
+                console.error('Error cargando líderes:', error);
+                document.getElementById('lideresResult').innerHTML = '<p class="text-danger">Error cargando líderes</p>';
+            }
+        }
+
+        function actualizarStatsLideres(lideres) {
+            const totalLideres = lideres.length;
+            const lideresRojo = lideres.filter(l => l.partido === 'ROJO').length;
+            const lideresVerde = lideres.filter(l => l.partido === 'VERDE').length;
+            const totalPersonas = lideres.reduce((sum, l) => sum + l.total_asignados, 0);
+
+            document.getElementById('totalLideres').textContent = totalLideres;
+            document.getElementById('lideresRojo').textContent = lideresRojo;
+            document.getElementById('lideresVerde').textContent = lideresVerde;
+            document.getElementById('totalPersonasLideres').textContent = totalPersonas;
+        }
+
+        function mostrarLideres(lideres) {
+            if (!lideres || lideres.length === 0) {
+                document.getElementById('lideresResult').innerHTML = '<p class="text-center">No hay líderes registrados</p>';
+                return;
+            }
+
+            const html = lideres.map(lider => {
+                const isExpanded = lideresExpandidos.has(lider.id);
+                const partidoClass = lider.partido === 'ROJO' ? 'badge-danger' : 'badge-success';
+                const partidoIcon = lider.partido === 'ROJO' ? '🔴' : '🟢';
+                
+                return `
+                    <div class="card mb-2" style="border-left: 4px solid ${lider.partido === 'ROJO' ? '#dc3545' : '#28a745'};">
+                        <div style="padding: 15px; cursor: pointer;" onclick="toggleLider(${lider.id})">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div style="flex: 1;">
+                                    <h4 style="margin: 0; display: flex; align-items: center; gap: 10px;">
+                                        ${partidoIcon} ${lider.nombre}
+                                        <span class="badge ${partidoClass}" style="font-size: 0.7em;">${lider.partido}</span>
+                                    </h4>
+                                </div>
+                                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; text-align: center;">
+                                    <div>
+                                        <strong style="font-size: 1.2em; color: #007bff;">${lider.total_asignados}</strong>
+                                        <div style="font-size: 0.85em; color: #666;">👥 Personas</div>
+                                    </div>
+                                    <div>
+                                        <strong style="font-size: 1.2em; color: #28a745;">${lider.total_votados}</strong>
+                                        <div style="font-size: 0.85em; color: #666;">✅ Votados</div>
+                                    </div>
+                                    <div>
+                                        <strong style="font-size: 1.2em; color: #ffc107;">${lider.porcentaje_participacion}%</strong>
+                                        <div style="font-size: 0.85em; color: #666;">📊 Participación</div>
+                                    </div>
+                                </div>
+                                <div style="margin-left: 20px; font-size: 1.5em;">
+                                    ${isExpanded ? '▼' : '▶'}
+                                </div>
+                            </div>
+                        </div>
+                        <div id="lider-personas-${lider.id}" style="display: ${isExpanded ? 'block' : 'none'}; padding: 15px; background: #f8f9fa; border-top: 1px solid #ddd;">
+                            ${isExpanded ? '<p class="text-center">Cargando personas...</p>' : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('lideresResult').innerHTML = html;
+
+            // Si hay líderes expandidos, recargar sus personas
+            lideresExpandidos.forEach(liderId => {
+                cargarPersonasLider(liderId);
+            });
+        }
+
+        async function toggleLider(liderId) {
+            if (lideresExpandidos.has(liderId)) {
+                lideresExpandidos.delete(liderId);
+                document.getElementById(`lider-personas-${liderId}`).style.display = 'none';
+            } else {
+                lideresExpandidos.add(liderId);
+                document.getElementById(`lider-personas-${liderId}`).style.display = 'block';
+                await cargarPersonasLider(liderId);
+            }
+        }
+
+        async function cargarPersonasLider(liderId) {
+            try {
+                const response = await apiCall(`/api/admin/lideres/${liderId}/personas`);
+                if (response.success) {
+                    const container = document.getElementById(`lider-personas-${liderId}`);
+                    const personas = response.data.personas;
+
+                    if (personas.length === 0) {
+                        container.innerHTML = '<p class="text-center">No hay personas asignadas a este líder</p>';
+                        return;
+                    }
+
+                    const tableHtml = `
+                        <div style="overflow-x: auto;">
+                            <table class="table table-striped" style="margin: 0;">
+                                <thead>
+                                    <tr>
+                                        <th>Nombre</th>
+                                        <th>Documento</th>
+                                        <th>Teléfono</th>
+                                        <th>Dirección</th>
+                                        <th>Barrio</th>
+                                        <th>Puesto</th>
+                                        <th>Contador</th>
+                                        <th>Estado</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${personas.map(p => `
+                                        <tr>
+                                            <td>${p.nombre}</td>
+                                            <td>${p.documento}</td>
+                                            <td>${p.telefono || '-'}</td>
+                                            <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${p.direccion || ''}">${p.direccion || '-'}</td>
+                                            <td>${p.zona_nombre || '-'}</td>
+                                            <td>${p.lugar_votacion_nombre || '-'}</td>
+                                            <td>${p.contador_nombre || '-'}</td>
+                                            <td>
+                                                <span class="badge ${p.voto ? 'badge-success' : 'badge-warning'}">
+                                                    ${p.voto ? '✅ Votó' : '⏳ Pendiente'}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div style="margin-top: 10px; padding: 10px; background: white; border-radius: 5px;">
+                            <strong>Total: ${personas.length} personas</strong>
+                            | Votados: <span style="color: #28a745;">${personas.filter(p => p.voto).length}</span>
+                            | Pendientes: <span style="color: #ffc107;">${personas.filter(p => !p.voto).length}</span>
+                        </div>
+                    `;
+
+                    container.innerHTML = tableHtml;
+                }
+            } catch (error) {
+                console.error('Error cargando personas del líder:', error);
+                document.getElementById(`lider-personas-${liderId}`).innerHTML = '<p class="text-danger">Error cargando personas</p>';
+            }
+        }
+
+        function filtrarLideres() {
+            const searchTerm = document.getElementById('searchLider').value.toLowerCase();
+            if (!searchTerm) {
+                mostrarLideres(todosLosLideres);
+                actualizarStatsLideres(todosLosLideres);
+                return;
+            }
+
+            const lideresFiltrados = todosLosLideres.filter(lider => 
+                lider.nombre.toLowerCase().includes(searchTerm)
+            );
+
+            mostrarLideres(lideresFiltrados);
+            actualizarStatsLideres(lideresFiltrados);
+        }
+
+        async function importarExcel(partido) {
+            const fileInputId = partido === 'ROJO' ? 'excelFileRojo' : 'excelFileVerde';
+            const resultDivId = partido === 'ROJO' ? 'importResultRojo' : 'importResultVerde';
+            
+            const fileInput = document.getElementById(fileInputId);
+            const file = fileInput.files[0];
+            if (!file) {
+                alert('Por favor selecciona un archivo');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('partido', partido);
+
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`${API_URL}/api/data/import`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: formData
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    document.getElementById(resultDivId).innerHTML = `
+                        <div class="alert alert-success">
+                            ✅ Importación exitosa!<br>
+                            <strong>Leídas del Excel:</strong><br>
+                            • Personas: ${data.detalles?.personasLeidas || 0}<br>
+                            • Líderes: ${data.detalles?.lideresDetectados || 0}<br>
+                            • Barrios/Zonas: ${data.detalles?.zonasDetectadas || 0}<br>
+                            • Puestos votación: ${data.detalles?.puestosDetectados || 0}<br>
+                            <br>
+                            <strong>Guardadas en BD:</strong><br>
+                            • Personas: ${data.data.personasImportadas}<br>
+                            • Líderes creados: ${data.data.lideresCreados}<br>
+                            • Barrios creados: ${data.data.zonasCreadas}<br>
+                            • Puestos creados: ${data.data.puestosCreados || 0}
+                        </div>
+                    `;
+                    loadDashboard();
+                    fileInput.value = ''; // Limpiar input
+                } else {
+                    const errorMsg = data.error ? `${data.message}: ${data.error}` : data.message;
+                    document.getElementById(resultDivId).innerHTML = `
+                        <div class="alert alert-danger">
+                            ❌ ${errorMsg}
+                            ${data.details ? `<br><small>${data.details}</small>` : ''}
+                            ${data.columnasDetectadas ? `<br><br>Columnas detectadas: ${JSON.stringify(data.columnasDetectadas)}` : ''}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error importando:', error);
+                document.getElementById(resultDivId).innerHTML = `
+                    <div class="alert alert-danger">
+                        ❌ Error al importar: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        async function exportarExcel() {
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`${API_URL}/api/data/export`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `Reporte_Electoral_${new Date().toISOString().split('T')[0]}.xlsx`;
+                a.click();
+            } catch (error) {
+                console.error('Error exportando:', error);
+                alert('Error al exportar');
+            }
+        }
+
+        function initializeWebSocket() {
+            const token = localStorage.getItem('token');
+            socket = io(API_URL, {
+                auth: { token }
+            });
+
+            socket.on('connect', () => console.log('WebSocket conectado'));
+            socket.on('estadisticas-actualizadas', (stats) => updateStats(stats));
+            socket.on('voto-actualizado', () => loadDashboard());
+        }
+
+        async function apiCall(endpoint, options = {}) {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`${API_URL}${endpoint}`, {
+                ...options,
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                    ...options.headers
+                }
+            });
+            return response.json();
+        }
+        
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `alert alert-${type}`;
+            toast.style.position = 'fixed';
+            toast.style.top = '20px';
+            toast.style.right = '20px';
+            toast.style.zIndex = '10000';
+            toast.style.minWidth = '300px';
+            toast.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+            toast.textContent = message;
+            
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transition = 'opacity 0.3s';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // Funciones para crear contador
+        function showCreateContador() {
+            document.getElementById('modalCrearContador').style.display = 'flex';
+            // Limpiar campos
+            document.getElementById('contadorNombre').value = '';
+            document.getElementById('contadorUsername').value = '';
+            document.getElementById('contadorPassword').value = '';
+            document.getElementById('contadorEmail').value = '';
+        }
+
+        function closeModalContador() {
+            document.getElementById('modalCrearContador').style.display = 'none';
+        }
+
+        async function crearContador() {
+            const nombre = document.getElementById('contadorNombre').value.trim();
+            const username = document.getElementById('contadorUsername').value.trim();
+            const password = document.getElementById('contadorPassword').value;
+            const email = document.getElementById('contadorEmail').value.trim();
+
+            // Validaciones
+            if (!nombre) {
+                showToast('El nombre completo es obligatorio', 'danger');
+                return;
+            }
+
+            if (!username) {
+                showToast('El usuario es obligatorio', 'danger');
+                return;
+            }
+
+            if (!password || password.length < 6) {
+                showToast('La contraseña debe tener al menos 6 caracteres', 'danger');
+                return;
+            }
+
+            try {
+                const response = await apiCall('/api/admin/contadores', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        nombre_completo: nombre,
+                        username: username,
+                        password: password,
+                        email: email || undefined
+                    })
+                });
+
+                if (response.success) {
+                    showToast('Contador creado exitosamente', 'success');
+                    closeModalContador();
+                    await loadContadores(); // Recargar la lista
+                } else {
+                    showToast(response.message || 'Error al crear contador', 'danger');
+                }
+            } catch (error) {
+                console.error('Error creando contador:', error);
+                showToast('Error al crear contador', 'danger');
+            }
+        }
+
+        // Función para eliminar contador
+        async function eliminarContador(id, nombre) {
+            if (!confirm(`¿Estás seguro de eliminar al contador "${nombre}"?\n\nSi tiene personas asignadas, se desasignarán automáticamente.`)) {
+                return;
+            }
+
+            try {
+                const response = await apiCall(`/api/admin/contadores/${id}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.success) {
+                    showToast(response.message, 'success');
+                    await loadContadores(); // Recargar la lista
+                } else {
+                    showToast(response.message || 'Error al eliminar contador', 'danger');
+                }
+            } catch (error) {
+                console.error('Error eliminando contador:', error);
+                showToast('Error al eliminar contador', 'danger');
+            }
+        }
+
+        // Cerrar modal al hacer click fuera
+        window.addEventListener('click', function(event) {
+            const modal = document.getElementById('modalCrearContador');
+            if (event.target === modal) {
+                closeModalContador();
+            }
+        });
+    </script>
+</body>
+</html>

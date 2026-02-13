@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Sistema Electoral v3.0.0</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <meta name="description" content="Sistema de Votación Electoral Enterprise - La Fortaleza Digital de la Democracia">
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <div class="login-logo">🏰</div>
+                <h1>Sistema Electoral</h1>
+                <p>v3.0.0 - La Fortaleza Digital de la Democracia</p>
+            </div>
+
+            <div id="alertContainer"></div>
+
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="username">Usuario</label>
+                    <input type="text" id="username" name="username" required autocomplete="username">
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Contraseña</label>
+                    <input type="password" id="password" name="password" required autocomplete="current-password">
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block" id="loginBtn">
+                    Iniciar Sesión
+                </button>
+            </form>
+
+            <div class="text-center mt-3">
+                <p style="color: var(--text-secondary); font-size: 0.9rem;">
+                    🔐 Conexión segura con cifrado de 256 bits
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = window.location.origin;
+
+        function showAlert(message, type = 'danger') {
+            const alertContainer = document.getElementById('alertContainer');
+            alertContainer.innerHTML = `
+                <div class="alert alert-${type}">
+                    ${message}
+                </div>
+            `;
+
+            setTimeout(() => {
+                alertContainer.innerHTML = '';
+            }, 5000);
+        }
+
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            const loginBtn = document.getElementById('loginBtn');
+
+            if (!username || !password) {
+                showAlert('Por favor completa todos los campos');
+                return;
+            }
+
+            loginBtn.disabled = true;
+            loginBtn.textContent = 'Iniciando sesión...';
+
+            try {
+                const response = await fetch(`${API_URL}/api/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': generateCSRFToken()
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Guardar token y datos de usuario
+                    localStorage.setItem('token', data.data.token);
+                    localStorage.setItem('user', JSON.stringify(data.data.user));
+
+                    showAlert('¡Login exitoso! Redirigiendo...', 'success');
+
+                    // Redirigir según el rol
+                    setTimeout(() => {
+                        if (data.data.user.role === 'admin') {
+                            window.location.href = '/admin';
+                        } else if (data.data.user.role === 'contador') {
+                            window.location.href = '/contador';
+                        }
+                    }, 1000);
+                } else {
+                    showAlert(data.message || 'Error en el login');
+                    loginBtn.disabled = false;
+                    loginBtn.textContent = 'Iniciar Sesión';
+                }
+
+            } catch (error) {
+                console.error('Error:', error);
+                showAlert('Error de conexión con el servidor');
+                loginBtn.disabled = false;
+                loginBtn.textContent = 'Iniciar Sesión';
+            }
+        });
+
+        function generateCSRFToken() {
+            return Math.random().toString(36).substring(2) + Date.now().toString(36);
+        }
+
+        // Verificar si ya está logueado
+        window.addEventListener('load', () => {
+            const token = localStorage.getItem('token');
+            const user = localStorage.getItem('user');
+
+            if (token && user) {
+                const userData = JSON.parse(user);
+                if (userData.role === 'admin') {
+                    window.location.href = '/admin';
+                } else if (userData.role === 'contador') {
+                    window.location.href = '/contador';
+                }
+            }
+        });
+    </script>
+</body>
+</html>

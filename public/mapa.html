@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapa Electoral - Sistema Electoral v3.0.0</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <meta name="description" content="Mapa Electoral Interactivo">
+    <link rel="stylesheet" href="/css/styles.css">
+    <style>
+        #map {
+            height: 80vh;
+            width: 100%;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+
+        .info-box {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .zona-legend {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .zona-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .zona-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+        }
+    </style>
+</head>
+<body style="background: #F5F7FA;">
+    <!-- Navbar -->
+    <div class="navbar">
+        <div class="navbar-brand">
+            🗺️ Mapa Electoral Interactivo
+        </div>
+        <div class="navbar-user">
+            <a href="/admin" class="btn btn-primary">← Volver al Panel</a>
+            <button class="btn btn-danger" onclick="logout()">Cerrar Sesión</button>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="container-fluid">
+        <!-- Info Box -->
+        <div class="info-box mt-2">
+            <h3>📊 Estadísticas del Mapa</h3>
+            <div class="row">
+                <div class="col-3">
+                    <p><strong>Total de Zonas:</strong> <span id="totalZonas">0</span></p>
+                </div>
+                <div class="col-3">
+                    <p><strong>Total de Personas:</strong> <span id="totalPersonasMapa">0</span></p>
+                </div>
+                <div class="col-3">
+                    <p><strong>Participación Promedio:</strong> <span id="participacionPromedio">0%</span></p>
+                </div>
+                <div class="col-3">
+                    <p><strong>Lugares de Votación:</strong> <span id="totalLugares">0</span></p>
+                </div>
+            </div>
+
+            <h4 class="mt-2">Leyenda de Participación</h4>
+            <div class="zona-legend">
+                <div class="zona-item">
+                    <div class="zona-color" style="background: #27AE60;"></div>
+                    <span>Alta (> 70%)</span>
+                </div>
+                <div class="zona-item">
+                    <div class="zona-color" style="background: #F39C12;"></div>
+                    <span>Media (40% - 70%)</span>
+                </div>
+                <div class="zona-item">
+                    <div class="zona-color" style="background: #E74C3C;"></div>
+                    <span>Baja (< 40%)</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mapa -->
+        <div class="card">
+            <div class="card-header">🗺️ Mapa Interactivo</div>
+            <div class="card-body">
+                <div id="map"></div>
+                
+                <div class="alert alert-info mt-3">
+                    💡 <strong>Nota:</strong> Para usar el mapa interactivo completo con Google Maps, necesitas agregar tu API key en el archivo .env
+                    <br>
+                    El tamaño de los círculos es proporcional al número de personas en cada zona.
+                    <br>
+                    Los colores indican el nivel de participación electoral.
+                </div>
+
+                <!-- Vista alternativa (simulada) -->
+                <div id="mapaSim ulado" class="mt-3">
+                    <h4>Vista de Zonas Electorales</h4>
+                    <div id="zonasGrid" class="row"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = window.location.origin;
+
+        window.addEventListener('load', async () => {
+            await checkAuth();
+            await loadMapaElectoral();
+        });
+
+        async function checkAuth() {
+            const token = localStorage.getItem('token');
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+            if (!token || user.role !== 'admin') {
+                window.location.href = '/';
+                return;
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = '/';
+        }
+
+        async function loadMapaElectoral() {
+            try {
+                const response = await apiCall('/api/admin/mapa');
+                if (response.success) {
+                    displayMapaSimulado(response.data);
+                    updateMapaStats(response.data);
+                }
+            } catch (error) {
+                console.error('Error loading mapa:', error);
+            }
+        }
+
+        function updateMapaStats(data) {
+            document.getElementById('totalZonas').textContent = data.zonas.length;
+            
+            const totalPersonas = data.zonas.reduce((sum, z) => sum + z.total_personas, 0);
+            document.getElementById('totalPersonasMapa').textContent = totalPersonas;
+
+            const avgParticipacion = data.zonas.length > 0
+                ? (data.zonas.reduce((sum, z) => sum + parseFloat(z.porcentaje_participacion), 0) / data.zonas.length).toFixed(2)
+                : 0;
+            document.getElementById('participacionPromedio').textContent = avgParticipacion + '%';
+
+            document.getElementById('totalLugares').textContent = data.lugares.length;
+        }
+
+        function displayMapaSimulado(data) {
+            const zonasGrid = document.getElementById('zonasGrid');
+            
+            zonasGrid.innerHTML = data.zonas.map(zona => {
+                const participacion = parseFloat(zona.porcentaje_participacion);
+                let colorClass = 'danger';
+                let colorBg = '#E74C3C';
+                
+                if (participacion > 70) {
+                    colorClass = 'success';
+                    colorBg = '#27AE60';
+                } else if (participacion >= 40) {
+                    colorClass = 'warning';
+                    colorBg = '#F39C12';
+                }
+
+                return `
+                    <div class="col-4 mb-2">
+                        <div class="card" style="border-left: 5px solid ${colorBg};">
+                            <div class="card-body">
+                                <h4>${zona.nombre}</h4>
+                                <div style="display: flex; justify-content: space-between; margin-top: 15px;">
+                                    <div>
+                                        <p><strong>Total:</strong> ${zona.total_personas}</p>
+                                        <p><strong>Votados:</strong> ${zona.total_votados}</p>
+                                    </div>
+                                    <div class="stat-card ${colorClass}" style="padding: 15px; min-width: 100px;">
+                                        <h3 style="margin: 0; font-size: 1.5rem;">${participacion}%</h3>
+                                        <p style="margin: 0; font-size: 0.8rem;">Participación</p>
+                                    </div>
+                                </div>
+                                ${zona.latitud && zona.longitud ? `
+                                    <p class="mt-2" style="font-size: 0.85rem; color: var(--text-secondary);">
+                                        📍 ${zona.latitud.toFixed(4)}, ${zona.longitud.toFixed(4)}
+                                    </p>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // Inicializar mapa de Google Maps si hay API key
+            initGoogleMaps(data);
+        }
+
+        function initGoogleMaps(data) {
+            // Placeholder para Google Maps
+            // Requiere Google Maps API Key en producción
+            const mapDiv = document.getElementById('map');
+            
+            // Simulación visual del mapa
+            mapDiv.innerHTML = `
+                <div style="
+                    height: 100%;
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: white;
+                    text-align: center;
+                    padding: 40px;
+                    flex-direction: column;
+                    gap: 20px;
+                ">
+                    <div style="font-size: 4rem;">🗺️</div>
+                    <h2>Mapa Electoral Interactivo</h2>
+                    <p style="max-width: 600px;">
+                        Para habilitar el mapa interactivo completo con Google Maps, 
+                        agrega tu <strong>GOOGLE_MAPS_API_KEY</strong> en el archivo .env
+                    </p>
+                    <div class="row" style="width: 100%; max-width: 1000px; margin-top: 20px;">
+                        ${data.zonas.map((zona, index) => {
+                            const participacion = parseFloat(zona.porcentaje_participacion);
+                            let color = '#E74C3C';
+                            if (participacion > 70) color = '#27AE60';
+                            else if (participacion >= 40) color = '#F39C12';
+                            
+                            const size = 60 + (zona.total_personas / 10);
+                            const positions = [
+                                { top: '20%', left: '15%' },
+                                { top: '30%', left: '70%' },
+                                { top: '60%', left: '25%' },
+                                { top: '50%', left: '60%' },
+                                { top: '75%', left: '45%' }
+                            ];
+                            const pos = positions[index % positions.length];
+                            
+                            return `
+                                <div style="
+                                    position: absolute;
+                                    top: ${pos.top};
+                                    left: ${pos.left};
+                                    width: ${size}px;
+                                    height: ${size}px;
+                                    background: ${color};
+                                    border-radius: 50%;
+                                    display: flex;
+                                    align-items: center;
+                                    justify-content: center;
+                                    color: white;
+                                    font-weight: bold;
+                                    font-size: 0.9rem;
+                                    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+                                    cursor: pointer;
+                                    transition: transform 0.3s;
+                                " 
+                                onmouseover="this.style.transform='scale(1.1)'"
+                                onmouseout="this.style.transform='scale(1)'"
+                                title="${zona.nombre}: ${zona.total_personas} personas, ${participacion}% participación">
+                                    ${zona.nombre.substring(0, 3)}
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        async function apiCall(endpoint, options = {}) {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`${API_URL}${endpoint}`, {
+                ...options,
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                    ...options.headers
+                }
+            });
+
+            return response.json();
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: electoral-system
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: node src/server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        generateValue: true
+      - key: BCRYPT_ROUNDS
+        value: 12
+      - key: RATE_LIMIT_WINDOW_MS
+        value: 900000
+      - key: RATE_LIMIT_MAX_REQUESTS
+        value: 100
+    healthCheckPath: /health
+    autoDeploy: true
+
+databases:
+  - name: electoral-db
+    plan: free
+    databaseName: electoral_system
+    user: electoral_user

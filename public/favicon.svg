@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Background -->
+  <rect width="64" height="64" rx="12" fill="#2563EB"/>
+  
+  <!-- Ballot Box -->
+  <rect x="16" y="22" width="32" height="28" rx="2" fill="#FFFFFF"/>
+  <rect x="16" y="22" width="32" height="6" fill="#1E40AF"/>
+  
+  <!-- Slot for ballot -->
+  <rect x="26" y="18" width="12" height="6" rx="1" fill="#1E40AF"/>
+  
+  <!-- Check mark -->
+  <path d="M 28 36 L 32 40 L 40 30" stroke="#2563EB" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  
+  <!-- Security shield -->
+  <path d="M 38 42 L 42 42 L 42 48 C 42 50 40 52 38 52 C 36 52 34 50 34 48 L 34 42 L 38 42 Z" fill="#10B981" opacity="0.9"/>
+  <circle cx="38" cy="44" r="1.5" fill="#FFFFFF"/>
+</svg>
