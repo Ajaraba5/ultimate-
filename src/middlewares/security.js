@@ -109,7 +109,7 @@ function commandInjectionGuard(req, res, next) {
   const cmdPatterns = [
     /[;&|`$(){}[\]<>]/,
     /(\.\.|\/etc\/|\/bin\/|\/usr\/)/,
-    /(wget|curl|nc|netcat|bash|sh|cmd|powershell)/i
+    /\b(?:wget|curl|nc|netcat|bash|sh|cmd|powershell)\b/i
   ];
   
   const allParams = {

@@ -134,6 +134,7 @@
         const API_URL = window.location.origin;
         let socket = null;
         let currentAction = null;
+        let isSubmittingAction = false;
 
         window.addEventListener('load', async () => {
             await checkAuth();
@@ -254,36 +255,47 @@
         }
 
         async function confirmAction() {
-            if (!currentAction) return;
+            if (!currentAction || isSubmittingAction) return;
 
             const endpoint = currentAction.type === 'marcar' 
                 ? '/api/contador/marcar-voto'
                 : '/api/contador/desmarcar-voto';
 
+            const actionSnapshot = { ...currentAction };
+            const confirmBtn = document.getElementById('modalConfirmBtn');
+            isSubmittingAction = true;
+            confirmBtn.disabled = true;
+
             try {
                 const response = await apiCall(endpoint, {
                     method: 'POST',
-                    body: JSON.stringify({ personaId: currentAction.personaId })
+                    body: JSON.stringify({ personaId: actionSnapshot.personaId })
                 });
 
-                if (response.success) {
+                const message = String(response?.message || '').toLowerCase();
+                const alreadyInExpectedState =
+                    (actionSnapshot.type === 'marcar' && message.includes('ya votó')) ||
+                    (actionSnapshot.type === 'desmarcar' && message.includes('no ha votado'));
+
+                if (response.success || alreadyInExpectedState) {
                     closeModal();
                     await loadMisEstadisticas();
                     await loadMisPersonas();
 
-                    // Emitir evento WebSocket
                     if (socket && socket.connected) {
-                        socket.emit('voto-marcado', { personaId: currentAction.personaId });
+                        socket.emit('voto-marcado', { personaId: actionSnapshot.personaId });
                     }
 
-                    // Mostrar notificación
-                    alert(`✅ ${currentAction.type === 'marcar' ? 'Voto marcado' : 'Voto desmarcado'} exitosamente!`);
+                    alert(`✅ ${actionSnapshot.type === 'marcar' ? 'Voto marcado' : 'Voto desmarcado'} exitosamente!`);
                 } else {
                     alert(`❌ ${response.message}`);
                 }
             } catch (error) {
                 console.error('Error:', error);
                 alert('❌ Error al procesar la acción');
+            } finally {
+                isSubmittingAction = false;
+                confirmBtn.disabled = false;
             }
         }
 
