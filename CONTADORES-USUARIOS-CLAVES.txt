@@ -1,0 +1,262 @@
+LISTADO DE CONTADORES POR SEDE - USUARIO Y CONTRASEÑA
+Fecha: 2026-02-28T19:16:34.809Z
+
+Usuario: cnt_sede_10_no_se_encuentra_en_e
+Password: Contador123!
+Nombre: Contador NO SE ENCUENTRA EN EL CENSO
+Activo: SI
+Lugar: NO SE ENCUENTRA EN EL CENSO
+Mesa: TODAS
+----------------------------------------
+Usuario: cnt_sede_11_penol_antioquia
+Password: Contador123!
+Nombre: Contador PEÑOL - ANTIOQUIA
+Activo: SI
+Lugar: PEÑOL - ANTIOQUIA
+Mesa: TODAS
+----------------------------------------
+Usuario: cnt_sede_12_baranoa
+Password: Contador123!
+Nombre: Contador BARANOA
+Activo: SI
+Lugar: BARANOA
+Mesa: TODAS
+----------------------------------------
+Usuario: cnt_sede_13_no_se_encuentra_en_c
+Password: Contador123!
+Nombre: Contador NO SE ENCUENTRA EN CENSO
+Activo: SI
+Lugar: NO SE ENCUENTRA EN CENSO
+Mesa: TODAS
+----------------------------------------
+Usuario: cnt_sede_14_no_se_encuentra_en_e
+Password: Contador123!
+Nombre: Contador NO SE ENCUENTRA EN EL CENSI
+Activo: SI
+Lugar: NO SE ENCUENTRA EN EL CENSI
+Mesa: TODAS
+----------------------------------------
+Usuario: cnt_sede_15_bolivar
+Password: Contador123!
+Nombre: Contador BOLIVAR
+Activo: SI
+Lugar: BOLIVAR
+Mesa: TODAS
+----------------------------------------
+Usuario: cnt_sede_16_sucre
+Password: Contador123!
+Nombre: Contador SUCRE
+Activo: SI
+Lugar: SUCRE
+Mesa: TODAS
+----------------------------------------
+Usuario: cnt_sede_17_valencia
+Password: Contador123!
+Nombre: Contador VALENCIA
+Activo: SI
+Lugar: VALENCIA
+Mesa: TODAS
+----------------------------------------
+Usuario: cnt_sede_18_la_guajira
+Password: Contador123!
+Nombre: Contador LA GUAJIRA
+Activo: SI
+Lugar: LA GUAJIRA
+Mesa: TODAS
+----------------------------------------
+Usuario: cnt_sede_19_i_e_fco_de_paula_san
+Password: Contador123!
+Nombre: Contador I.E FCO DE PAULA SANTANDER SEDE PPAL
+Activo: SI
+Lugar: I.E FCO DE PAULA SANTANDER SEDE PPAL
+Mesa: TODAS
+----------------------------------------
+Usuario: cnt_sede_20_i_e_maria_auxiliador
+Password: Contador123!
+Nombre: Contador I.E.MARIA AUXILIADORA SEDE 2
+Activo: SI
+Lugar: I.E.MARIA AUXILIADORA SEDE 2
+Mesa: TODAS
+----------------------------------------
+Usuario: cnt_sede_21_i_e_fco_de_paula_san
+Password: Contador123!
+Nombre: Contador I.E FCO DE PAULA SANTANDER SD PETRONITAS
+Activo: SI
+Lugar: I.E FCO DE PAULA SANTANDER SD PETRONITAS
+Mesa: TODAS
+----------------------------------------
+Usuario: cnt_sede_22_i_e_maria_auxiliador
+Password: Contador123!
+Nombre: Contador I.E MARIA AUXILIADORA SEDE PPAL
+Activo: SI
+Lugar: I.E MARIA AUXILIADORA SEDE PPAL
+Mesa: TODAS
+----------------------------------------
+Usuario: cnt_sede_23_i_e_megacolegio_vill
+Password: Contador123!
+Nombre: Contador I.E MEGACOLEGIO VILLA OLIMPICA
+Activo: SI
+Lugar: I.E MEGACOLEGIO VILLA OLIMPICA
+Mesa: TODAS
+----------------------------------------
+Usuario: cnt_sede_24_i_e_roque_acosta_ech
+Password: Contador123!
+Nombre: Contador I.E ROQUE ACOSTA ECHEVERRIA
+Activo: SI
+Lugar: I.E ROQUE ACOSTA ECHEVERRIA
+Mesa: TODAS
+----------------------------------------
+Usuario: cnt_sede_25_i_e_fco_de_paula_san
+Password: Contador123!
+Nombre: Contador I.E FCO DE PAULA SANTANDER SEDE PPAL (JURADO)
+Activo: SI
+Lugar: I.E FCO DE PAULA SANTANDER SEDE PPAL (JURADO)
+Mesa: TODAS
+----------------------------------------
+Usuario: cnt_sede_26_i_e_megacolegio_mund
+Password: Contador123!
+Nombre: Contador I.E MEGACOLEGIO MUNDO FELIZ
+Activo: SI
+Lugar: I.E MEGACOLEGIO MUNDO FELIZ
+Mesa: TODAS
+----------------------------------------
+Usuario: cnt_sede_27_francisco_de_paula_s
+Password: Contador123!
+Nombre: Contador FRANCISCO DE PAULA SEDE PPAL
+Activo: SI
+Lugar: FRANCISCO DE PAULA SEDE PPAL
+Mesa: TODAS
+----------------------------------------
+Usuario: cnt_sede_28_i_e_antonio_narino_d
+Password: Contador123!
+Nombre: Contador I.E ANTONIO NARIÑO DE PALUATO
+Activo: SI
+Lugar: I.E ANTONIO NARIÑO DE PALUATO
+Mesa: TODAS
+----------------------------------------
+Usuario: cnt_sede_29_i_e_maria_auxiliador
+Password: Contador123!
+Nombre: Contador I.E MARIA AUXILIADORA SEDE PPAL (JURADO)
+Activo: SI
+Lugar: I.E MARIA AUXILIADORA SEDE PPAL (JURADO)
+Mesa: TODAS
+----------------------------------------
+Usuario: cnt_sede_30_i_e_antonio_narino_d
+Password: Contador123!
+Nombre: Contador I.E ANTONIO NARIÑO DE PALUATO (JURADO)
+Activo: SI
+Lugar: I.E ANTONIO NARIÑO DE PALUATO (JURADO)
+Mesa: TODAS
+----------------------------------------
+Usuario: cnt_sede_31_i_e_maria_auxiliador
+Password: Contador123!
+Nombre: Contador I.E.MARIA AUXILIADORA SEDE 2 (JURADO)
+Activo: SI
+Lugar: I.E.MARIA AUXILIADORA SEDE 2 (JURADO)
+Mesa: TODAS
+----------------------------------------
+Usuario: cnt_sede_32_roque_acosta_echever
+Password: Contador123!
+Nombre: Contador ROQUE ACOSTA ECHEVERRIA
+Activo: SI
+Lugar: ROQUE ACOSTA ECHEVERRIA
+Mesa: TODAS
+----------------------------------------
+Usuario: cnt_sede_33_i_e_fco_de_paula_san
+Password: Contador123!
+Nombre: Contador I.E FCO DE PAULA SANTANDER SD PETRONITAS (JURADO)
+Activo: SI
+Lugar: I.E FCO DE PAULA SANTANDER SD PETRONITAS (JURADO)
+Mesa: TODAS
+----------------------------------------
+Usuario: cnt_sede_34_ie_maria_auxiliadora
+Password: Contador123!
+Nombre: Contador IE MARIA AUXILIADORA SEDE PPAL
+Activo: SI
+Lugar: IE MARIA AUXILIADORA SEDE PPAL
+Mesa: TODAS
+----------------------------------------
+Usuario: cnt_sede_35_mega_colegio_villa_o
+Password: Contador123!
+Nombre: Contador MEGA COLEGIO VILLA OLIMPICA
+Activo: SI
+Lugar: MEGA COLEGIO VILLA OLIMPICA
+Mesa: TODAS
+----------------------------------------
+Usuario: cnt_sede_36_francisco_de_paula_s
+Password: Contador123!
+Nombre: Contador FRANCISCO DE PAULA  SEDE PETRONITAS
+Activo: SI
+Lugar: FRANCISCO DE PAULA  SEDE PETRONITAS
+Mesa: TODAS
+----------------------------------------
+Usuario: cnt_sede_37_roque_acosra_echever
+Password: Contador123!
+Nombre: Contador ROQUE ACOSRA ECHEVERRIA
+Activo: SI
+Lugar: ROQUE ACOSRA ECHEVERRIA
+Mesa: TODAS
+----------------------------------------
+Usuario: cnt_sede_38_megacolegio_mundo_fe
+Password: Contador123!
+Nombre: Contador MEGACOLEGIO MUNDO FELIZ
+Activo: SI
+Lugar: MEGACOLEGIO MUNDO FELIZ
+Mesa: TODAS
+----------------------------------------
+Usuario: cnt_sede_39_ie_maria_auxiliadora
+Password: Contador123!
+Nombre: Contador IE MARIA AUXILIADORA SEDE PPAL (JURADO)
+Activo: SI
+Lugar: IE MARIA AUXILIADORA SEDE PPAL (JURADO)
+Mesa: TODAS
+----------------------------------------
+Usuario: cnt_sede_40_antonio_narino_palua
+Password: Contador123!
+Nombre: Contador ANTONIO NARIÑO PALUATO
+Activo: SI
+Lugar: ANTONIO NARIÑO PALUATO
+Mesa: TODAS
+----------------------------------------
+Usuario: cnt_sede_41_francisco_de_paula_s
+Password: Contador123!
+Nombre: Contador FRANCISCO DE PAULA SEDE PETRONITAS
+Activo: SI
+Lugar: FRANCISCO DE PAULA SEDE PETRONITAS
+Mesa: TODAS
+----------------------------------------
+Usuario: cnt_sede_42_guimaral
+Password: Contador123!
+Nombre: Contador GUIMARAL
+Activo: SI
+Lugar: GUIMARAL
+Mesa: TODAS
+----------------------------------------
+Usuario: cnt_sede_6_object_object
+Password: Contador123!
+Nombre: Contador [object Object]
+Activo: SI
+Lugar: [object Object]
+Mesa: TODAS
+----------------------------------------
+Usuario: cnt_sede_7_barranquilla
+Password: Contador123!
+Nombre: Contador BARRANQUILLA
+Activo: SI
+Lugar: BARRANQUILLA
+Mesa: TODAS
+----------------------------------------
+Usuario: cnt_sede_8_bogota
+Password: Contador123!
+Nombre: Contador BOGOTA
+Activo: SI
+Lugar: BOGOTA
+Mesa: TODAS
+----------------------------------------
+Usuario: cnt_sede_9_santo_tomas
+Password: Contador123!
+Nombre: Contador SANTO TOMAS
+Activo: SI
+Lugar: SANTO TOMAS
+Mesa: TODAS
+----------------------------------------

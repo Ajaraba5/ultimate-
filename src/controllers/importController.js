@@ -174,6 +174,7 @@ async function importarExcel(req, res) {
           direccion,
           lider,
           partido,
+          mesa,
           zona,
           puestoVotacion
         };
@@ -212,6 +213,11 @@ async function importarExcel(req, res) {
         message: 'No se encontraron personas válidas en el archivo'
       });
     }
+
+    await query('ALTER TABLE personas ADD COLUMN IF NOT EXISTS mesa VARCHAR(20)');
+    await query('CREATE INDEX IF NOT EXISTS idx_personas_mesa ON personas(mesa)');
+    await query('ALTER TABLE users ADD COLUMN IF NOT EXISTS lugar_votacion_id INTEGER REFERENCES lugares_votacion(id) ON DELETE SET NULL');
+    await query('ALTER TABLE users ADD COLUMN IF NOT EXISTS mesa VARCHAR(20)');
     
     // Iniciar transacción
     console.log('\n💾 Iniciando transacción de base de datos...');
@@ -337,8 +343,8 @@ async function importarExcel(req, res) {
           const result = await client.query(
             `INSERT INTO personas (
               nombre, documento, telefono, direccion, 
-              zona_id, lider_id, partido, lugar_votacion_id, voto
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, false)
+              zona_id, lider_id, partido, lugar_votacion_id, mesa, voto
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, false)
             ON CONFLICT (documento) DO UPDATE SET
               nombre = EXCLUDED.nombre,
               telefono = EXCLUDED.telefono,
@@ -346,7 +352,8 @@ async function importarExcel(req, res) {
               zona_id = EXCLUDED.zona_id,
               lider_id = EXCLUDED.lider_id,
               partido = EXCLUDED.partido,
-              lugar_votacion_id = EXCLUDED.lugar_votacion_id
+              lugar_votacion_id = EXCLUDED.lugar_votacion_id,
+              mesa = EXCLUDED.mesa
             RETURNING id, (xmax = 0) AS inserted`,
             [
               persona.nombre,
@@ -356,7 +363,8 @@ async function importarExcel(req, res) {
               zonaId,
               liderId,
               persona.partido,
-              lugarVotacionId
+              lugarVotacionId,
+              persona.mesa
             ]
           );
           

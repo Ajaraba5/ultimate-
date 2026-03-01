@@ -36,6 +36,9 @@ const initializeSocket = require('./socket/socketHandler');
 const app = express();
 const server = http.createServer(app);
 
+// Confiar en proxies (necesario para Cloudflare, Railway, etc.)
+app.set('trust proxy', true);
+
 // Configuración de CORS según entorno
 const allowedOrigins = process.env.ALLOWED_ORIGINS 
   ? process.env.ALLOWED_ORIGINS.split(',') 

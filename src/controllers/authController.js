@@ -160,9 +160,18 @@ async function login(req, res) {
 async function logout(req, res) {
   try {
     const userId = req.user.userId;
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
     
-    // Eliminar todas las sesiones del usuario
-    await query('DELETE FROM sessions WHERE user_id = $1', [userId]);
+    if (token) {
+      const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+      await query(
+        'DELETE FROM sessions WHERE user_id = $1 AND token_hash = $2',
+        [userId, tokenHash]
+      );
+    } else {
+      await query('DELETE FROM sessions WHERE user_id = $1', [userId]);
+    }
     
     await logAuditEvent(userId, 'LOGOUT', req, {}, true);
     

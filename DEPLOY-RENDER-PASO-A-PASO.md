@@ -45,7 +45,7 @@ git push -u origin main
 4. Database: `electoral_system`
 5. User: `electoral_user`
 6. Region: Oregon (US West)
-7. Plan: **Free**
+7. Plan: **Starter (pago, 24/7)**
 8. Create Database
 9. **IMPORTANTE**: Copia la "Internal Database URL"
 
@@ -61,7 +61,7 @@ git push -u origin main
    - **Runtime**: Node
    - **Build Command**: `npm install`
    - **Start Command**: `node src/server.js`
-   - **Plan**: Free
+   - **Plan**: Starter (pago)
 
 **D. Variables de entorno**
 
@@ -121,12 +121,12 @@ Esa es tu URL pública 24/7!
 
 ## 📊 Render - Plan Gratuito
 
-✅ Hosting gratis ilimitado
-✅ PostgreSQL gratis (90 días, luego $7/mes)
+✅ Hosting 24/7 sin sleep
+✅ PostgreSQL administrado 24/7
 ✅ SSL/HTTPS automático
 ✅ Auto-deploy desde GitHub
 ✅ 750 horas/mes gratis
-⚠️ Se "duerme" después de 15 min sin uso (tarda ~30s en despertar)
+✅ No se duerme (plan pago)
 
 ---
 
@@ -142,22 +142,9 @@ Render auto-despliega en ~5 minutos.
 
 ---
 
-## ⚡ Evitar que se "duerma"
+## ⚡ Mantener 24/7
 
-El plan gratuito se duerme. Opciones:
-
-**Opción 1: Upgrade a plan pago ($7/mes)**
-- Dashboard → Settings → Upgrade to Paid
-- Nunca se duerme
-
-**Opción 2: Ping cada 10 minutos (gratis)**
-
-Usa un servicio como UptimeRobot:
-1. Ve a https://uptimerobot.com
-2. Add New Monitor
-3. URL: tu URL de Render
-4. Interval: 5 minutes
-5. Gratis hasta 50 monitores
+Con plan Starter no necesitas pings externos. El servicio permanece activo.
 
 ---
 

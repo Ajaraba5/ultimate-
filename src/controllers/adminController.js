@@ -280,6 +280,9 @@ async function getContadores(req, res) {
         u.nombre_completo,
         u.email,
         u.telefono,
+        u.mesa,
+        u.lugar_votacion_id,
+        lv.nombre as lugar_votacion_nombre,
         u.is_active,
         u.ultimo_login,
         COUNT(p.id)::INTEGER as total_asignados,
@@ -294,8 +297,9 @@ async function getContadores(req, res) {
         ) as porcentaje
       FROM users u
       LEFT JOIN personas p ON p.contador_id = u.id
-      WHERE u.role = 'contador'
-      GROUP BY u.id
+      LEFT JOIN lugares_votacion lv ON lv.id = u.lugar_votacion_id
+      WHERE u.role = 'contador' AND u.is_active = true
+      GROUP BY u.id, lv.nombre
       ORDER BY u.nombre_completo
     `);
     
@@ -362,8 +366,8 @@ async function createContador(req, res) {
         'users',
         result.rows[0].id,
         JSON.stringify({ username, nombreCompleto }),
-        req.ip,
-        req.headers['user-agent']
+        req.ip || 'unknown',
+        req.headers['user-agent'] || 'unknown'
       ]
     );
     
@@ -387,7 +391,160 @@ async function createContador(req, res) {
  */
 async function asignarPersonasContador(req, res) {
   try {
-    const { contadorId, personaIds } = req.body;
+    const {
+      contadorId,
+      personaIds,
+      autoByMesaLugar,
+      autoBySede,
+      passwordDefecto
+    } = req.body;
+
+    if (autoByMesaLugar || autoBySede) {
+      const bcrypt = require('bcryptjs');
+
+      const normalizeSegment = (text) => {
+        if (!text) return 'na';
+        return text
+          .toString()
+          .toLowerCase()
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .replace(/[^a-z0-9]+/g, '_')
+          .replace(/^_+|_+$/g, '')
+          .slice(0, 20) || 'na';
+      };
+
+      const finalPassword = passwordDefecto || process.env.AUTO_CONTADOR_PASSWORD || 'Contador123!';
+
+      const stats = await transaction(async (client) => {
+        await client.query('ALTER TABLE personas ADD COLUMN IF NOT EXISTS mesa VARCHAR(20)');
+        await client.query('CREATE INDEX IF NOT EXISTS idx_personas_mesa ON personas(mesa)');
+        await client.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS lugar_votacion_id INTEGER REFERENCES lugares_votacion(id) ON DELETE SET NULL');
+        await client.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS mesa VARCHAR(20)');
+
+        const gruposResult = await client.query(`
+          SELECT
+            p.lugar_votacion_id,
+            lv.nombre AS lugar_nombre,
+            COUNT(*)::INTEGER AS total_personas
+          FROM personas p
+          JOIN lugares_votacion lv ON lv.id = p.lugar_votacion_id
+          WHERE p.lugar_votacion_id IS NOT NULL
+          GROUP BY p.lugar_votacion_id, lv.nombre
+          ORDER BY lv.nombre
+        `);
+
+        const groups = gruposResult.rows;
+        const passwordHash = await bcrypt.hash(finalPassword, 12);
+        let usersCreated = 0;
+        let usersReused = 0;
+        let oldMesaUsersDisabled = 0;
+
+        for (const group of groups) {
+          const existingBySede = await client.query(
+            `SELECT id FROM users
+             WHERE role = 'contador'
+               AND lugar_votacion_id = $1
+               AND (mesa IS NULL OR TRIM(COALESCE(mesa, '')) = '')
+             LIMIT 1`,
+            [group.lugar_votacion_id]
+          );
+
+          let selectedUserId;
+
+          if (existingBySede.rows.length > 0) {
+            selectedUserId = existingBySede.rows[0].id;
+            usersReused++;
+          } else {
+            const baseUsername = `cnt_sede_${group.lugar_votacion_id}_${normalizeSegment(group.lugar_nombre)}`.slice(0, 45);
+            let username = baseUsername;
+            let suffix = 1;
+
+            while (true) {
+              const usernameExists = await client.query(
+                'SELECT 1 FROM users WHERE username = $1 LIMIT 1',
+                [username]
+              );
+              if (usernameExists.rows.length === 0) break;
+              suffix++;
+              username = `${baseUsername}_${suffix}`.slice(0, 50);
+            }
+
+            const nombreCompleto = `Contador ${group.lugar_nombre}`.slice(0, 100);
+
+            const inserted = await client.query(
+              `INSERT INTO users (
+                username, password_hash, role, nombre_completo,
+                is_active, lugar_votacion_id, mesa
+              ) VALUES ($1, $2, 'contador', $3, true, $4, NULL)
+              RETURNING id`,
+              [username, passwordHash, nombreCompleto, group.lugar_votacion_id]
+            );
+
+            selectedUserId = inserted.rows[0].id;
+            usersCreated++;
+          }
+
+          const disableResult = await client.query(
+            `UPDATE users
+             SET is_active = false, updated_at = NOW()
+             WHERE role = 'contador'
+               AND lugar_votacion_id = $1
+               AND mesa IS NOT NULL
+               AND id <> $2`,
+            [group.lugar_votacion_id, selectedUserId]
+          );
+          oldMesaUsersDisabled += disableResult.rowCount;
+        }
+
+        const asignacionResult = await client.query(`
+          UPDATE personas p
+          SET contador_id = u.id
+          FROM users u
+          WHERE u.role = 'contador'
+            AND u.is_active = true
+            AND u.lugar_votacion_id IS NOT NULL
+            AND p.lugar_votacion_id = u.lugar_votacion_id
+            AND (u.mesa IS NULL OR TRIM(COALESCE(u.mesa, '')) = '')
+            AND p.lugar_votacion_id IS NOT NULL
+        `);
+
+        const pendingResult = await client.query(`
+          SELECT COUNT(*)::INTEGER AS total
+          FROM personas
+          WHERE lugar_votacion_id IS NOT NULL
+            AND contador_id IS NULL
+        `);
+
+        return {
+          sedesDetectadas: groups.length,
+          contadoresCreados: usersCreated,
+          contadoresExistentes: usersReused,
+          contadoresMesaDesactivados: oldMesaUsersDisabled,
+          personasAsignadas: asignacionResult.rowCount,
+          personasSinContador: pendingResult.rows[0].total,
+          passwordDefecto: finalPassword
+        };
+      });
+
+      await query(
+        `INSERT INTO audit_log (user_id, action, details, ip_address, user_agent)
+         VALUES ($1, $2, $3, $4, $5)`,
+        [
+          req.user.userId,
+          'AUTO_ASSIGN_CONTADORES_SEDE',
+          JSON.stringify(stats),
+          req.ip,
+          req.headers['user-agent']
+        ]
+      );
+
+      return res.json({
+        success: true,
+        message: 'Contadores creados/asignados automáticamente por sede',
+        data: stats
+      });
+    }
     
     if (!contadorId || !personaIds || !Array.isArray(personaIds)) {
       return res.status(400).json({
@@ -398,7 +555,7 @@ async function asignarPersonasContador(req, res) {
     
     // Verificar que el contador existe
     const contadorResult = await query(
-      'SELECT id FROM users WHERE id = $1 AND role = $\'contador\'',
+      'SELECT id FROM users WHERE id = $1 AND role = \'contador\'',
       [contadorId]
     );
     
