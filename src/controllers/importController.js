@@ -33,6 +33,74 @@ function getCellValue(row, columnIndex) {
   return strValue === '' ? null : strValue;
 }
 
+function isLikelyHeaderlessFormat(worksheet, headers) {
+  if (headers.nombre || headers.documento) return false;
+
+  const firstRow = worksheet.getRow(1);
+  const col1 = getCellValue(firstRow, 1);
+  const col5 = getCellValue(firstRow, 5);
+
+  const looksLikeDocumento = !!col1 && /^\d{5,}$/.test(col1.replace(/\D/g, ''));
+  const looksLikeLider = !!col5 && /[a-zA-Z]/.test(col5);
+  return looksLikeDocumento && looksLikeLider;
+}
+
+function countValidDocuments(worksheet) {
+  const headers = {};
+  const firstRow = worksheet.getRow(1);
+
+  firstRow.eachCell((cell, colNumber) => {
+    const headerNormalized = normalizeText(cell.value?.toString().trim());
+    if (!headerNormalized) return;
+
+    if (headerNormalized.includes('nombres y apellidos') || headerNormalized.includes('nombre')) {
+      headers.nombre = colNumber;
+    } else if (
+      headerNormalized.includes('cedula de ciudadania') ||
+      headerNormalized.includes('cedula') ||
+      headerNormalized.includes('documento') ||
+      headerNormalized === 'cc'
+    ) {
+      headers.documento = colNumber;
+    }
+  });
+
+  const headerless = isLikelyHeaderlessFormat(worksheet, headers);
+  const startRow = headerless ? 1 : 2;
+  const maxRows = Math.min(worksheet.rowCount, startRow + 299);
+
+  let validDocs = 0;
+  for (let rowNumber = startRow; rowNumber <= maxRows; rowNumber++) {
+    const row = worksheet.getRow(rowNumber);
+    const documento = headerless
+      ? getCellValue(row, 1)
+      : getCellValue(row, headers.documento);
+
+    if (documento && /^\d{5,}$/.test(documento.replace(/\D/g, ''))) {
+      validDocs++;
+    }
+  }
+
+  return validDocs;
+}
+
+function pickBestWorksheet(workbook) {
+  if (!workbook.worksheets || workbook.worksheets.length === 0) return null;
+
+  let selected = workbook.worksheets[0];
+  let bestScore = countValidDocuments(selected);
+
+  for (const worksheet of workbook.worksheets.slice(1)) {
+    const score = countValidDocuments(worksheet);
+    if (score > bestScore) {
+      selected = worksheet;
+      bestScore = score;
+    }
+  }
+
+  return selected;
+}
+
 /**
  * Importar personas desde Excel
  */
@@ -50,8 +118,8 @@ async function importarExcel(req, res) {
     
     const workbook = new ExcelJS.Workbook();
     await workbook.xlsx.load(req.file.buffer);
-    
-    const worksheet = workbook.getWorksheet(1);
+
+    const worksheet = pickBestWorksheet(workbook);
     
     if (!worksheet) {
       return res.status(400).json({
@@ -110,12 +178,31 @@ async function importarExcel(req, res) {
     
     console.log('\n📊 Resumen de columnas detectadas:', headers);
     
+    const headerlessFormat = isLikelyHeaderlessFormat(worksheet, headers);
+    const effectiveHeaders = headerlessFormat
+      ? {
+          documento: 1,
+          nombre: 2,
+          telefono: 3,
+          direccion: 4,
+          lider: 5,
+          partido: 6,
+          puestoVotacion: 7,
+          mesa: 8,
+          zona: 9
+        }
+      : headers;
+
+    if (headerlessFormat) {
+      console.log('ℹ️ Formato sin encabezados detectado. Se usarán columnas por posición.');
+    }
+
     // Validar que existan al menos nombre y documento
-    if (!headers.nombre || !headers.documento) {
+    if (!effectiveHeaders.nombre || !effectiveHeaders.documento) {
       return res.status(400).json({
         success: false,
         message: 'El archivo debe contener al menos las columnas "Nombre" y "Documento"',
-        columnasDetectadas: headers
+        columnasDetectadas: effectiveHeaders
       });
     }
     
@@ -125,13 +212,14 @@ async function importarExcel(req, res) {
     console.log(`  Total de filas en el archivo: ${totalRows}`);
     console.log(`  Columnas configuradas: nombre=${headers.nombre}, documento=${headers.documento}`);
     
-    for (let rowNumber = 2; rowNumber <= totalRows; rowNumber++) {
+    const startRow = headerlessFormat ? 1 : 2;
+    for (let rowNumber = startRow; rowNumber <= totalRows; rowNumber++) {
       try {
         const row = worksheet.getRow(rowNumber);
         
         // Obtener valores raw para debug
-        const nombreRaw = headers.nombre ? row.getCell(headers.nombre).value : null;
-        const documentoRaw = headers.documento ? row.getCell(headers.documento).value : null;
+        const nombreRaw = effectiveHeaders.nombre ? row.getCell(effectiveHeaders.nombre).value : null;
+        const documentoRaw = effectiveHeaders.documento ? row.getCell(effectiveHeaders.documento).value : null;
         
         console.log(`  Fila ${rowNumber} [RAW]: nombre="${nombreRaw}", documento="${documentoRaw}"`);
         
@@ -155,13 +243,13 @@ async function importarExcel(req, res) {
         }
         
         // Obtener campos opcionales de forma segura
-        const telefono = getCellValue(row, headers.telefono);
-        const direccion = getCellValue(row, headers.direccion);
-        const lider = getCellValue(row, headers.lider);
-        const zona = getCellValue(row, headers.zona);
-        const puestoVotacion = getCellValue(row, headers.puestoVotacion);
-        const mesa = getCellValue(row, headers.mesa);
-        const partidoExcelRaw = getCellValue(row, headers.partido);
+        const telefono = getCellValue(row, effectiveHeaders.telefono);
+        const direccion = getCellValue(row, effectiveHeaders.direccion);
+        const lider = getCellValue(row, effectiveHeaders.lider);
+        const zona = getCellValue(row, effectiveHeaders.zona);
+        const puestoVotacion = getCellValue(row, effectiveHeaders.puestoVotacion);
+        const mesa = getCellValue(row, effectiveHeaders.mesa);
+        const partidoExcelRaw = getCellValue(row, effectiveHeaders.partido);
         
         // Detectar partido del Excel o usar el asignado
         const partidoExcel = partidoExcelRaw ? partidoExcelRaw.toUpperCase() : null;
