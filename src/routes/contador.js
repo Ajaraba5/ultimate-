@@ -5,7 +5,6 @@
 const express = require('express');
 const router = express.Router();
 const {
-  getMisEstadisticas,
   getMisPersonas,
   marcarVoto,
   desmarcarVoto
@@ -17,8 +16,6 @@ const { votingLimiter, searchLimiter } = require('../middlewares/rateLimiter');
 router.use(authenticateToken);
 router.use(requireContador);
 
-// Dashboard del contador
-router.get('/estadisticas', getMisEstadisticas);
 router.get('/personas', searchLimiter, getMisPersonas);
 
 // Marcar votos

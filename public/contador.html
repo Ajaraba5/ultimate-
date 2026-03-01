@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel Contador - Sistema Electoral v3.0.0</title>
+    <title>Panel Registrador - Sistema Electoral v3.0.0</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-    <meta name="description" content="Panel de contador del Sistema Electoral">
+    <meta name="description" content="Panel de usuario registrador del Sistema Electoral">
     <link rel="stylesheet" href="/css/styles.css">
     <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
 </head>
@@ -13,7 +13,7 @@
     <!-- Navbar -->
     <div class="navbar">
         <div class="navbar-brand">
-            📊 Panel de Contador
+            📊 Panel de Registrador
         </div>
         <div class="navbar-user">
             <span id="userName">Cargando...</span>
@@ -23,47 +23,6 @@
 
     <!-- Main Container -->
     <div class="container">
-        <!-- Mis Estadísticas -->
-        <div class="card mt-2">
-            <div class="card-header">📊 Mis Estadísticas</div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-3">
-                        <div class="stat-card">
-                            <h3 id="misAsignados">0</h3>
-                            <p>👥 Asignados a Mí</p>
-                        </div>
-                    </div>
-                    <div class="col-3">
-                        <div class="stat-card success">
-                            <h3 id="misVotados">0</h3>
-                            <p>✅ Ya Votaron</p>
-                        </div>
-                    </div>
-                    <div class="col-3">
-                        <div class="stat-card danger">
-                            <h3 id="misPendientes">0</h3>
-                            <p>⏳ Pendientes</p>
-                        </div>
-                    </div>
-                    <div class="col-3">
-                        <div class="stat-card warning">
-                            <h3 id="miPorcentaje">0%</h3>
-                            <p>📊 Mi Progreso</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Barra de Progreso -->
-                <div class="mt-3">
-                    <h4>Progreso de Votación</h4>
-                    <div class="progress">
-                        <div class="progress-bar" id="progressBar" style="width: 0%;">0%</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <!-- Mis Personas -->
         <div class="card">
             <div class="card-header">👥 Mis Personas Asignadas</div>
@@ -138,12 +97,8 @@
 
         window.addEventListener('load', async () => {
             await checkAuth();
-            await loadMisEstadisticas();
             await loadMisPersonas();
             initializeWebSocket();
-
-            // Actualizar estadísticas cada 5 segundos
-            setInterval(loadMisEstadisticas, 5000);
         });
 
         async function checkAuth() {
@@ -163,28 +118,6 @@
             localStorage.removeItem('user');
             if (socket) socket.disconnect();
             window.location.href = '/';
-        }
-
-        async function loadMisEstadisticas() {
-            try {
-                const response = await apiCall('/api/contador/estadisticas');
-                if (response.success) {
-                    const stats = response.data;
-
-                    document.getElementById('misAsignados').textContent = stats.total_asignados || 0;
-                    document.getElementById('misVotados').textContent = stats.total_votados || 0;
-                    document.getElementById('misPendientes').textContent = stats.total_pendientes || 0;
-                    document.getElementById('miPorcentaje').textContent = (stats.porcentaje_participacion || 0) + '%';
-
-                    // Actualizar barra de progreso
-                    const progressBar = document.getElementById('progressBar');
-                    const porcentaje = stats.porcentaje_participacion || 0;
-                    progressBar.style.width = porcentaje + '%';
-                    progressBar.textContent = porcentaje + '%';
-                }
-            } catch (error) {
-                console.error('Error loading estadísticas:', error);
-            }
         }
 
         async function loadMisPersonas() {
@@ -279,7 +212,6 @@
 
                 if (response.success || alreadyInExpectedState) {
                     closeModal();
-                    await loadMisEstadisticas();
                     await loadMisPersonas();
 
                     if (socket && socket.connected) {
@@ -316,7 +248,6 @@
 
             socket.on('asignacion-actualizada', (data) => {
                 console.log('📢 Asignación actualizada:', data);
-                loadMisEstadisticas();
                 loadMisPersonas();
                 alert(data.mensaje);
             });

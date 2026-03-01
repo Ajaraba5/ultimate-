@@ -55,7 +55,7 @@
             <div style="display: flex; gap: 10px; border-bottom: 2px solid #E0E0E0; padding-bottom: 10px;">
                 <button id="btnDashboard" class="btn btn-primary" onclick="showTab('dashboard')">📊 Dashboard</button>
                 <button id="btnPersonas" class="btn btn-secondary" onclick="showTab('personas')">👥 Personas</button>
-                <button id="btnContadores" class="btn btn-secondary" onclick="showTab('contadores')">📝 Contadores</button>
+                <button id="btnContadores" class="btn btn-secondary" onclick="showTab('contadores')">📝 Usuarios Registradores</button>
                 <button id="btnLideres" class="btn btn-secondary" onclick="showTab('lideres')">🎯 Líderes</button>
                 <button id="btnImport" class="btn btn-secondary" onclick="showTab('import')">📥 Importar/Exportar</button>
             </div>
@@ -82,15 +82,7 @@
                 </div>
             </div>
             <div class="row">
-                <div class="col-6">
-                    <div class="card">
-                        <div class="card-header">📝 Rendimiento de Contadores</div>
-                        <div class="chart-container">
-                            <canvas id="chartContadores"></canvas>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-6">
+                <div class="col-12">
                     <div class="card">
                         <div class="card-header">📈 Participación Electoral</div>
                         <div class="chart-container">
@@ -140,7 +132,7 @@
                                     <th>Puesto Votación</th>
                                     <th>Partido</th>
                                     <th>Líder</th>
-                                    <th>Contador</th>
+                                    <th>Registrador</th>
                                     <th>Estado</th>
                                 </tr>
                             </thead>
@@ -153,22 +145,20 @@
             </div>
         </div>
 
-        <!-- Tab: Contadores -->
+        <!-- Tab: Usuarios Registradores -->
         <div id="tabContadores" class="tab-content d-none">
             <div class="card">
-                <div class="card-header">📝 Gestión de Contadores</div>
+                <div class="card-header">📝 Gestión de Usuarios Registradores</div>
                 <div class="card-body">
-                    <button class="btn btn-success mb-2" onclick="showCreateContador()">➕ Crear Contador</button>
+                    <button class="btn btn-success mb-2" onclick="showCreateContador()">➕ Crear Usuario Registrador</button>
                     <div style="overflow-x: auto;">
                         <table>
                             <thead>
                                 <tr>
                                     <th>Nombre</th>
                                     <th>Username</th>
-                                    <th>Asignados</th>
-                                    <th>Votados</th>
-                                    <th>Pendientes</th>
-                                    <th>Porcentaje</th>
+                                    <th>Lugar</th>
+                                    <th>Mesa</th>
                                     <th>Último Login</th>
                                     <th>Acciones</th>
                                 </tr>
@@ -272,7 +262,6 @@
                                 <li>✅ Estadísticas generales</li>
                                 <li>✅ Datos por partido</li>
                                 <li>✅ Análisis de líderes</li>
-                                <li>✅ Rendimiento de contadores</li>
                                 <li>✅ Estadísticas de zonas</li>
                                 <li>✅ Resumen ejecutivo (9 hojas)</li>
                             </ul>
@@ -286,11 +275,11 @@
         </div>
     </div>
 
-    <!-- Modal Crear Contador -->
+    <!-- Modal Crear Usuario Registrador -->
     <div id="modalCrearContador" class="modal" style="display: none;">
         <div class="modal-content" style="max-width: 500px;">
             <div class="modal-header">
-                <h3>➕ Crear Nuevo Contador</h3>
+                <h3>➕ Crear Nuevo Usuario Registrador</h3>
                 <button class="btn btn-sm" onclick="closeModalContador()" style="background: none; border: none; font-size: 1.5em; cursor: pointer;">&times;</button>
             </div>
             <div class="modal-body">
@@ -313,7 +302,7 @@
             </div>
             <div class="modal-footer">
                 <button class="btn btn-secondary" onclick="closeModalContador()">Cancelar</button>
-                <button class="btn btn-success" onclick="crearContador()">Crear Contador</button>
+                <button class="btn btn-success" onclick="crearContador()">Crear Usuario Registrador</button>
             </div>
         </div>
     </div>
@@ -464,22 +453,6 @@
                 options: { responsive: true, maintainAspectRatio: false }
             });
 
-            // Gráfica de Contadores
-            const ctxContadores = document.getElementById('chartContadores').getContext('2d');
-            if (charts.contadores) charts.contadores.destroy();
-            charts.contadores = new Chart(ctxContadores, {
-                type: 'bar',
-                data: {
-                    labels: data.contadores.map(c => c.nombre_completo),
-                    datasets: [{
-                        label: 'Votados',
-                        data: data.contadores.map(c => c.total_votados),
-                        backgroundColor: '#27AE60'
-                    }]
-                },
-                options: { responsive: true, maintainAspectRatio: false }
-            });
-
             // Gráfica de Participación
             const ctxParticipacion = document.getElementById('chartParticipacion').getContext('2d');
             if (charts.participacion) charts.participacion.destroy();
@@ -601,14 +574,14 @@
                 });
                 
                 if (response.success) {
-                    showToast('Contador asignado exitosamente', 'success');
+                    showToast('Registrador asignado exitosamente', 'success');
                 } else {
-                    showToast('Error al asignar contador', 'error');
+                    showToast('Error al asignar registrador', 'error');
                     loadPersonas(); // Recargar para revertir el cambio visual
                 }
             } catch (error) {
                 console.error('Error asignando contador:', error);
-                showToast('Error al asignar contador', 'error');
+                showToast('Error al asignar registrador', 'error');
                 loadPersonas();
             }
         }
@@ -622,16 +595,14 @@
                         <tr>
                             <td>${c.nombre_completo}</td>
                             <td>${c.username}</td>
-                            <td>${c.total_asignados}</td>
-                            <td>${c.total_votados}</td>
-                            <td>${c.total_pendientes}</td>
-                            <td>${c.porcentaje}%</td>
+                            <td>${c.lugar_votacion_nombre || '-'}</td>
+                            <td>${c.mesa || 'TODAS'}</td>
                             <td>${c.ultimo_login ? new Date(c.ultimo_login).toLocaleString() : 'Nunca'}</td>
                             <td>
                                 <button class="btn btn-danger btn-sm" onclick="eliminarContador(${c.id}, '${c.nombre_completo.replace(/'/g, "\\'")}')">🗑️ Eliminar</button>
                             </td>
                         </tr>
-                    `).join('') || '<tr><td colspan="8" class="text-center">No hay contadores</td></tr>';
+                    `).join('') || '<tr><td colspan="6" class="text-center">No hay usuarios registradores</td></tr>';
                 }
             } catch (error) {
                 console.error('Error loading contadores:', error);
@@ -781,7 +752,7 @@
                                         <th>Dirección</th>
                                         <th>Barrio</th>
                                         <th>Puesto</th>
-                                        <th>Contador</th>
+                                        <th>Registrador</th>
                                         <th>Estado</th>
                                     </tr>
                                 </thead>
@@ -967,7 +938,7 @@
             }, 3000);
         }
 
-        // Funciones para crear contador
+        // Funciones para crear usuario registrador
         function showCreateContador() {
             document.getElementById('modalCrearContador').style.display = 'flex';
             // Limpiar campos
@@ -1015,21 +986,21 @@
                 });
 
                 if (response.success) {
-                    showToast('Contador creado exitosamente', 'success');
+                    showToast('Usuario registrador creado exitosamente', 'success');
                     closeModalContador();
                     await loadContadores(); // Recargar la lista
                 } else {
-                    showToast(response.message || 'Error al crear contador', 'danger');
+                    showToast(response.message || 'Error al crear usuario registrador', 'danger');
                 }
             } catch (error) {
                 console.error('Error creando contador:', error);
-                showToast('Error al crear contador', 'danger');
+                showToast('Error al crear usuario registrador', 'danger');
             }
         }
 
-        // Función para eliminar contador
+        // Función para eliminar usuario registrador
         async function eliminarContador(id, nombre) {
-            if (!confirm(`¿Estás seguro de eliminar al contador "${nombre}"?\n\nSi tiene personas asignadas, se desasignarán automáticamente.`)) {
+            if (!confirm(`¿Estás seguro de eliminar al usuario registrador "${nombre}"?\n\nSi tiene personas asignadas, se desasignarán automáticamente.`)) {
                 return;
             }
 

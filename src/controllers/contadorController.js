@@ -6,43 +6,6 @@
 const { query } = require('../config/database');
 
 /**
- * Obtener mis estadísticas como contador
- */
-async function getMisEstadisticas(req, res) {
-  try {
-    const contadorId = req.user.userId;
-    
-    const result = await query(`
-      SELECT 
-        COUNT(*)::INTEGER as total_asignados,
-        COUNT(*) FILTER (WHERE voto = true)::INTEGER as total_votados,
-        COUNT(*) FILTER (WHERE voto = false)::INTEGER as total_pendientes,
-        ROUND(
-          CASE 
-            WHEN COUNT(*) = 0 THEN 0
-            ELSE COUNT(*) FILTER (WHERE voto = true) * 100.0 / COUNT(*)
-          END,
-          2
-        ) as porcentaje_participacion
-      FROM personas
-      WHERE contador_id = $1
-    `, [contadorId]);
-    
-    res.json({
-      success: true,
-      data: result.rows[0]
-    });
-    
-  } catch (error) {
-    console.error('Error en getMisEstadisticas:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error obteniendo estadísticas'
-    });
-  }
-}
-
-/**
  * Obtener mis personas asignadas
  */
 async function getMisPersonas(req, res) {
@@ -242,7 +205,6 @@ async function desmarcarVoto(req, res) {
 }
 
 module.exports = {
-  getMisEstadisticas,
   getMisPersonas,
   marcarVoto,
   desmarcarVoto

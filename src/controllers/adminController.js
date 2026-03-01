@@ -52,30 +52,6 @@ async function getDashboard(req, res) {
       LIMIT 5
     `);
     
-    // Rendimiento de contadores
-    const contadoresResult = await query(`
-      SELECT 
-        u.id,
-        u.username,
-        u.nombre_completo,
-        COUNT(p.id)::INTEGER as total_asignados,
-        COUNT(p.id) FILTER (WHERE p.voto = true)::INTEGER as total_votados,
-        COUNT(p.id) FILTER (WHERE p.voto = false)::INTEGER as total_pendientes,
-        ROUND(
-          CASE 
-            WHEN COUNT(p.id) = 0 THEN 0
-            ELSE COUNT(p.id) FILTER (WHERE p.voto = true) * 100.0 / COUNT(p.id)
-          END,
-          2
-        ) as porcentaje,
-        u.ultimo_login
-      FROM users u
-      LEFT JOIN personas p ON p.contador_id = u.id
-      WHERE u.role = 'contador' AND u.is_active = true
-      GROUP BY u.id, u.username, u.nombre_completo, u.ultimo_login
-      ORDER BY porcentaje DESC
-    `);
-    
     // Estadísticas por zona
     const zonasResult = await query(`
       SELECT 
@@ -103,7 +79,7 @@ async function getDashboard(req, res) {
       data: {
         stats: statsResult.rows[0],
         topLideres: lideresResult.rows,
-        contadores: contadoresResult.rows,
+        contadores: [],
         zonas: zonasResult.rows
       }
     });
@@ -284,22 +260,10 @@ async function getContadores(req, res) {
         u.lugar_votacion_id,
         lv.nombre as lugar_votacion_nombre,
         u.is_active,
-        u.ultimo_login,
-        COUNT(p.id)::INTEGER as total_asignados,
-        COUNT(p.id) FILTER (WHERE p.voto = true)::INTEGER as total_votados,
-        COUNT(p.id) FILTER (WHERE p.voto = false)::INTEGER as total_pendientes,
-        ROUND(
-          CASE 
-            WHEN COUNT(p.id) = 0 THEN 0
-            ELSE COUNT(p.id) FILTER (WHERE p.voto = true) * 100.0 / COUNT(p.id)
-          END,
-          2
-        ) as porcentaje
+        u.ultimo_login
       FROM users u
-      LEFT JOIN personas p ON p.contador_id = u.id
       LEFT JOIN lugares_votacion lv ON lv.id = u.lugar_votacion_id
       WHERE u.role = 'contador' AND u.is_active = true
-      GROUP BY u.id, lv.nombre
       ORDER BY u.nombre_completo
     `);
     
@@ -312,7 +276,7 @@ async function getContadores(req, res) {
     console.error('Error en getContadores:', error);
     res.status(500).json({
       success: false,
-      message: 'Error obteniendo contadores'
+      message: 'Error obteniendo usuarios registradores'
     });
   }
 }
@@ -373,7 +337,7 @@ async function createContador(req, res) {
     
     res.json({
       success: true,
-      message: 'Contador creado exitosamente',
+      message: 'Usuario registrador creado exitosamente',
       data: result.rows[0]
     });
     
@@ -381,7 +345,7 @@ async function createContador(req, res) {
     console.error('Error en createContador:', error);
     res.status(500).json({
       success: false,
-      message: 'Error creando contador'
+      message: 'Error creando usuario registrador'
     });
   }
 }
@@ -562,7 +526,7 @@ async function asignarPersonasContador(req, res) {
     if (contadorResult.rows.length === 0) {
       return res.status(404).json({
         success: false,
-        message: 'Contador no encontrado'
+        message: 'Usuario registrador no encontrado'
       });
     }
     
@@ -965,7 +929,7 @@ async function deleteContador(req, res) {
 
     res.json({
       success: true,
-      message: `Contador ${contador.nombre_completo} eliminado. ${totalPersonas} personas desasignadas.`,
+      message: `Usuario registrador ${contador.nombre_completo} eliminado. ${totalPersonas} personas desasignadas.`,
       data: {
         personas_desasignadas: totalPersonas
       }
@@ -975,7 +939,7 @@ async function deleteContador(req, res) {
     console.error('Error eliminando contador:', error);
     res.status(500).json({
       success: false,
-      message: 'Error eliminando contador'
+      message: 'Error eliminando usuario registrador'
     });
   }
 }

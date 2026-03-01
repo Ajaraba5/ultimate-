@@ -11,13 +11,20 @@ const { query } = require('../config/database');
  */
 const globalLimiter = rateLimit({
   windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15 minutos
-  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100, // 100 requests por ventana
+  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 1000, // 1000 requests por ventana
   message: {
     success: false,
     message: 'Demasiadas solicitudes. Por favor intenta más tarde.'
   },
   standardHeaders: true,
   legacyHeaders: false,
+  // No limitar healthcheck ni archivos estáticos para evitar falsos positivos
+  skip: (req) => {
+    if (req.path === '/health') return true;
+    if (req.path.startsWith('/css/') || req.path.startsWith('/js/') || req.path.startsWith('/uploads/')) return true;
+    if (req.path.endsWith('.ico') || req.path.endsWith('.png') || req.path.endsWith('.jpg') || req.path.endsWith('.svg')) return true;
+    return false;
+  },
   // Usar IP del cliente
   keyGenerator: (req) => {
     return req.ip || req.connection.remoteAddress;

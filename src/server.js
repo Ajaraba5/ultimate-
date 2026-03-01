@@ -252,12 +252,13 @@ process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 // Manejo de errores no capturados
 process.on('uncaughtException', (error) => {
   console.error('❌ Uncaught Exception:', error);
-  gracefulShutdown('uncaughtException');
+  // En producción registramos el error y mantenemos el proceso vivo para evitar caídas por picos temporales.
+  // Si necesitas estrategia fail-fast, usar PM2/systemd con restart policy.
 });
 
 process.on('unhandledRejection', (reason, promise) => {
   console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
-  gracefulShutdown('unhandledRejection');
+  // No apagar el proceso por rechazos no manejados puntuales bajo carga.
 });
 
 // Iniciar servidor
