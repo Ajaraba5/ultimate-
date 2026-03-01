@@ -24,7 +24,7 @@ CREATE TABLE users (
     nombre_completo VARCHAR(100) NOT NULL,
     email VARCHAR(100),
     telefono VARCHAR(20),
-    lugar_votacion_id INTEGER REFERENCES lugares_votacion(id) ON DELETE SET NULL,
+    lugar_votacion_id INTEGER,
     mesa VARCHAR(20),
     is_active BOOLEAN DEFAULT true,
     ultimo_login TIMESTAMP,
@@ -68,6 +68,13 @@ CREATE TABLE lugares_votacion (
 );
 
 CREATE INDEX idx_lugares_zona ON lugares_votacion(zona_id);
+
+-- FK diferida: users -> lugares_votacion (la tabla ya existe en este punto)
+ALTER TABLE users
+ADD CONSTRAINT users_lugar_votacion_id_fkey
+FOREIGN KEY (lugar_votacion_id)
+REFERENCES lugares_votacion(id)
+ON DELETE SET NULL;
 
 -- =====================================================
 -- TABLA: lideres (Líderes Políticos)
