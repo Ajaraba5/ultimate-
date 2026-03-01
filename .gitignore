@@ -15,6 +15,7 @@ logs/
 
 # Database
 *.sql
+!src/database/schema.sql
 backups/
 
 # OS
