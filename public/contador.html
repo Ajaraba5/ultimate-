@@ -25,28 +25,21 @@
     <div class="container">
         <!-- Mis Personas -->
         <div class="card">
-            <div class="card-header">👥 Mis Personas Asignadas</div>
+            <div class="card-header">🪪 Documentos Asignados</div>
             <div class="card-body">
                 <!-- Filtros y Búsqueda -->
                 <div class="row mb-2">
-                    <div class="col-8">
+                    <div class="col-12">
                         <div class="input-group">
-                            <input type="text" id="searchInput" placeholder="Buscar por nombre o documento...">
+                            <input type="text" id="searchInput" placeholder="Buscar por documento...">
                             <button class="btn btn-primary" onclick="loadMisPersonas()">🔍 Buscar</button>
                         </div>
-                    </div>
-                    <div class="col-4">
-                        <select id="filterEstado" onchange="loadMisPersonas()">
-                            <option value="">Todos</option>
-                            <option value="false">Pendientes</option>
-                            <option value="true">Votaron</option>
-                        </select>
                     </div>
                 </div>
 
                 <!-- Desmarcar información -->
                 <div class="alert alert-info mb-2">
-                    💡 <strong>Importante:</strong> Para marcar un voto, haz clic en el botón "Marcar Voto". Si marcaste por error, puedes desmarcarlo.
+                    💡 <strong>Importante:</strong> Solo se muestra el documento. Usa el botón "Marcar Voto" para registrar que la persona ya votó.
                 </div>
 
                 <!-- Tabla de Personas -->
@@ -54,17 +47,12 @@
                     <table>
                         <thead>
                             <tr>
-                                <th>Nombre</th>
                                 <th>Documento</th>
-                                <th>Teléfono</th>
-                                <th>Líder</th>
-                                <th>Zona</th>
-                                <th>Estado</th>
                                 <th>Acción</th>
                             </tr>
                         </thead>
                         <tbody id="personasTableBody">
-                            <tr><td colspan="7" class="text-center">Cargando mis personas...</td></tr>
+                            <tr><td colspan="2" class="text-center">Cargando documentos...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -123,37 +111,26 @@
         async function loadMisPersonas() {
             try {
                 const search = document.getElementById('searchInput').value;
-                const estado = document.getElementById('filterEstado').value;
 
                 const params = new URLSearchParams();
                 if (search) params.append('search', search);
-                if (estado) params.append('voto', estado);
 
                 const response = await apiCall(`/api/contador/personas?${params}`);
                 if (response.success) {
                     const tbody = document.getElementById('personasTableBody');
                     
                     if (response.data.length === 0) {
-                        tbody.innerHTML = '<tr><td colspan="7" class="text-center">No tienes personas asignadas</td></tr>';
+                        tbody.innerHTML = '<tr><td colspan="2" class="text-center">No tienes documentos asignados</td></tr>';
                         return;
                     }
 
                     tbody.innerHTML = response.data.map(persona => `
                         <tr style="${persona.voto ? 'background: #E8F8F5;' : ''}">
-                            <td><strong>${persona.nombre}</strong></td>
                             <td>${persona.documento}</td>
-                            <td>${persona.telefono || '-'}</td>
-                            <td>${persona.lider_nombre || '-'}</td>
-                            <td>${persona.zona_nombre || '-'}</td>
-                            <td>
-                                ${persona.voto 
-                                    ? '<span class="badge badge-success">✅ Votó</span>' 
-                                    : '<span class="badge badge-danger">⏳ Pendiente</span>'}
-                            </td>
                             <td>
                                 ${!persona.voto 
-                                    ? `<button class="btn btn-success" onclick="mostrarConfirmacionMarcar(${persona.id}, '${persona.nombre}')">✅ Marcar Voto</button>`
-                                    : `<button class="btn btn-warning" onclick="mostrarConfirmacionDesmarcar(${persona.id}, '${persona.nombre}')">↩️ Desmarcar</button>`}
+                                    ? `<button class="btn btn-success" onclick="mostrarConfirmacionMarcar(${persona.id}, '${persona.documento}')">✅ Marcar Voto</button>`
+                                    : `<span class="badge badge-success">✅ Votó</span>`}
                             </td>
                         </tr>
                     `).join('');
@@ -165,7 +142,7 @@
 
         function mostrarConfirmacionMarcar(personaId, nombre) {
             document.getElementById('modalTitle').textContent = 'Marcar Voto';
-            document.getElementById('modalMessage').textContent = `¿Confirmas que ${nombre} ya votó?`;
+            document.getElementById('modalMessage').textContent = `¿Confirmas que el documento ${nombre} ya votó?`;
             document.getElementById('confirmModal').classList.add('active');
 
             currentAction = {
@@ -175,24 +152,10 @@
             };
         }
 
-        function mostrarConfirmacionDesmarcar(personaId, nombre) {
-            document.getElementById('modalTitle').textContent = 'Desmarcar Voto';
-            document.getElementById('modalMessage').textContent = `¿Deseas desmarcar el voto de ${nombre}? (Solo en caso de error)`;
-            document.getElementById('confirmModal').classList.add('active');
-
-            currentAction = {
-                type: 'desmarcar',
-                personaId: personaId,
-                nombre: nombre
-            };
-        }
-
         async function confirmAction() {
             if (!currentAction || isSubmittingAction) return;
 
-            const endpoint = currentAction.type === 'marcar' 
-                ? '/api/contador/marcar-voto'
-                : '/api/contador/desmarcar-voto';
+            const endpoint = '/api/contador/marcar-voto';
 
             const actionSnapshot = { ...currentAction };
             const confirmBtn = document.getElementById('modalConfirmBtn');
@@ -206,9 +169,7 @@
                 });
 
                 const message = String(response?.message || '').toLowerCase();
-                const alreadyInExpectedState =
-                    (actionSnapshot.type === 'marcar' && message.includes('ya votó')) ||
-                    (actionSnapshot.type === 'desmarcar' && message.includes('no ha votado'));
+                const alreadyInExpectedState = message.includes('ya votó');
 
                 if (response.success || alreadyInExpectedState) {
                     closeModal();
@@ -218,7 +179,7 @@
                         socket.emit('voto-marcado', { personaId: actionSnapshot.personaId });
                     }
 
-                    alert(`✅ ${actionSnapshot.type === 'marcar' ? 'Voto marcado' : 'Voto desmarcado'} exitosamente!`);
+                    alert('✅ Voto marcado exitosamente!');
                 } else {
                     alert(`❌ ${response.message}`);
                 }
