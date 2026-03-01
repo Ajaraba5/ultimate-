@@ -10,7 +10,6 @@ const { query } = require('../config/database');
  */
 async function getMisPersonas(req, res) {
   try {
-    const contadorId = req.user.userId;
     const { search, voto, limit = 100, offset = 0 } = req.query;
     
     let queryText = `
@@ -23,11 +22,11 @@ async function getMisPersonas(req, res) {
       LEFT JOIN zonas z ON p.zona_id = z.id
       LEFT JOIN lideres l ON p.lider_id = l.id
       LEFT JOIN lugares_votacion lv ON p.lugar_votacion_id = lv.id
-      WHERE p.contador_id = $1
+      WHERE 1=1
     `;
     
-    const params = [contadorId];
-    let paramIndex = 2;
+    const params = [];
+    let paramIndex = 1;
     
     if (search) {
       params.push(`%${search}%`);
@@ -75,16 +74,16 @@ async function marcarVoto(req, res) {
       });
     }
     
-    // Verificar que la persona está asignada a este contador
+    // Verificar que la persona existe
     const checkResult = await query(
-      'SELECT id, voto, nombre FROM personas WHERE id = $1 AND contador_id = $2',
-      [personaId, contadorId]
+      'SELECT id, voto, nombre FROM personas WHERE id = $1',
+      [personaId]
     );
     
     if (checkResult.rows.length === 0) {
-      return res.status(403).json({
+      return res.status(404).json({
         success: false,
-        message: 'No tienes permiso para marcar esta persona'
+        message: 'Persona no encontrada'
       });
     }
     
@@ -147,16 +146,16 @@ async function desmarcarVoto(req, res) {
       });
     }
     
-    // Verificar que la persona está asignada a este contador
+    // Verificar que la persona existe
     const checkResult = await query(
-      'SELECT id, voto, nombre FROM personas WHERE id = $1 AND contador_id = $2',
-      [personaId, contadorId]
+      'SELECT id, voto, nombre FROM personas WHERE id = $1',
+      [personaId]
     );
     
     if (checkResult.rows.length === 0) {
-      return res.status(403).json({
+      return res.status(404).json({
         success: false,
-        message: 'No tienes permiso para modificar esta persona'
+        message: 'Persona no encontrada'
       });
     }
     

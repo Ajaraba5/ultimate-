@@ -23,9 +23,9 @@
 
     <!-- Main Container -->
     <div class="container">
-        <!-- Mis Personas -->
+        <!-- Personas -->
         <div class="card">
-            <div class="card-header">🪪 Documentos Asignados</div>
+            <div class="card-header">🪪 Documentos de la Base de Datos</div>
             <div class="card-body">
                 <!-- Filtros y Búsqueda -->
                 <div class="row mb-2">
@@ -120,7 +120,7 @@
                     const tbody = document.getElementById('personasTableBody');
                     
                     if (response.data.length === 0) {
-                        tbody.innerHTML = '<tr><td colspan="2" class="text-center">No tienes documentos asignados</td></tr>';
+                        tbody.innerHTML = '<tr><td colspan="2" class="text-center">No hay documentos</td></tr>';
                         return;
                     }
 
