@@ -102,7 +102,7 @@ CREATE INDEX idx_lideres_zona ON lideres(zona_id);
 CREATE TABLE personas (
     id SERIAL PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
-    documento VARCHAR(50) NOT NULL UNIQUE,
+    documento VARCHAR(50) NOT NULL,
     telefono VARCHAR(20),
     direccion TEXT,
     mesa VARCHAR(20),

@@ -223,7 +223,6 @@ async function importPersonas(personas) {
     const lideresCache = new Map();
 
     let insertadas = 0;
-    let actualizadas = 0;
 
     for (const persona of personas) {
       let zonaId = null;
@@ -252,21 +251,11 @@ async function importPersonas(personas) {
         liderId = lideresCache.get(liderKey);
       }
 
-      const upsert = await client.query(
+      await client.query(
         `INSERT INTO personas (
           nombre, documento, telefono, direccion,
           zona_id, lider_id, partido, lugar_votacion_id, mesa, voto
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, false)
-        ON CONFLICT (documento) DO UPDATE SET
-          nombre = EXCLUDED.nombre,
-          telefono = EXCLUDED.telefono,
-          direccion = EXCLUDED.direccion,
-          zona_id = EXCLUDED.zona_id,
-          lider_id = EXCLUDED.lider_id,
-          partido = EXCLUDED.partido,
-          lugar_votacion_id = EXCLUDED.lugar_votacion_id,
-          mesa = EXCLUDED.mesa
-        RETURNING (xmax = 0) AS inserted`,
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, false)`,
         [
           persona.nombre,
           persona.documento,
@@ -280,17 +269,13 @@ async function importPersonas(personas) {
         ]
       );
 
-      if (upsert.rows[0].inserted) {
-        insertadas++;
-      } else {
-        actualizadas++;
-      }
+      insertadas++;
     }
 
     return {
       total: personas.length,
       insertadas,
-      actualizadas
+      actualizadas: 0
     };
   });
 }

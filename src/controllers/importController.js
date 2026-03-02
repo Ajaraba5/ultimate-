@@ -419,7 +419,6 @@ async function importarExcel(req, res) {
       // Insertar personas
       console.log('\n👤 Importando personas a la base de datos...');
       let personasExitosas = 0;
-      let personasActualizadas = 0;
       
       for (let i = 0; i < personas.length; i++) {
         const persona = personas[i];
@@ -428,21 +427,11 @@ async function importarExcel(req, res) {
         const lugarVotacionId = persona.puestoVotacion ? puestoVotacionIds[persona.puestoVotacion] : null;
         
         try {
-          const result = await client.query(
+          await client.query(
             `INSERT INTO personas (
               nombre, documento, telefono, direccion, 
               zona_id, lider_id, partido, lugar_votacion_id, mesa, voto
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, false)
-            ON CONFLICT (documento) DO UPDATE SET
-              nombre = EXCLUDED.nombre,
-              telefono = EXCLUDED.telefono,
-              direccion = EXCLUDED.direccion,
-              zona_id = EXCLUDED.zona_id,
-              lider_id = EXCLUDED.lider_id,
-              partido = EXCLUDED.partido,
-              lugar_votacion_id = EXCLUDED.lugar_votacion_id,
-              mesa = EXCLUDED.mesa
-            RETURNING id, (xmax = 0) AS inserted`,
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, false)`,
             [
               persona.nombre,
               persona.documento,
@@ -455,16 +444,12 @@ async function importarExcel(req, res) {
               persona.mesa
             ]
           );
-          
-          if (result.rows[0].inserted) {
-            personasExitosas++;
-            if ((personasExitosas % 10) === 0) {
-              console.log(`  ✅ Insertadas: ${personasExitosas}/${personas.length}`);
-            }
-          } else {
-            personasActualizadas++;
+
+          personasExitosas++;
+          if ((personasExitosas % 10) === 0) {
+            console.log(`  ✅ Insertadas: ${personasExitosas}/${personas.length}`);
           }
-          
+
           stats.personasImportadas++;
         } catch (error) {
           console.error(`  ❌ Error en persona ${persona.nombre} (${persona.documento}):`, error.message);
@@ -473,7 +458,6 @@ async function importarExcel(req, res) {
       
       console.log(`\n✅ Proceso completado:`);
       console.log(`   Personas nuevas: ${personasExitosas}`);
-      console.log(`   Personas actualizadas: ${personasActualizadas}`);
       console.log(`   Total procesadas: ${stats.personasImportadas}`);
       
       return stats;
