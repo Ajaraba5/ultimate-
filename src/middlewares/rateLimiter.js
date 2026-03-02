@@ -11,7 +11,7 @@ const { query } = require('../config/database');
  */
 const globalLimiter = rateLimit({
   windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15 minutos
-  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 1000, // 1000 requests por ventana
+  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 12000, // configurable por env
   message: {
     success: false,
     message: 'Demasiadas solicitudes. Por favor intenta más tarde.'
@@ -120,8 +120,8 @@ const exportLimiter = rateLimit({
  * Rate limiter para operaciones de votación
  */
 const votingLimiter = rateLimit({
-  windowMs: parseInt(process.env.VOTING_RATE_LIMIT_WINDOW_MS) || 1 * 60 * 1000, // 1 minuto por defecto
-  max: parseInt(process.env.VOTING_RATE_LIMIT_MAX) || 240, // configurable por env
+  windowMs: parseInt(process.env.VOTING_RATE_LIMIT_WINDOW_MS) || 10 * 1000, // 10s por defecto
+  max: parseInt(process.env.VOTING_RATE_LIMIT_MAX) || 120, // configurable por env
   message: {
     success: false,
     message: 'Demasiados votos registrados muy rápido. Reduce la velocidad.'
@@ -136,7 +136,7 @@ const votingLimiter = rateLimit({
  */
 const searchLimiter = rateLimit({
   windowMs: parseInt(process.env.SEARCH_RATE_LIMIT_WINDOW_MS) || 1 * 60 * 1000, // 1 minuto por defecto
-  max: parseInt(process.env.SEARCH_RATE_LIMIT_MAX) || 300, // configurable por env
+  max: parseInt(process.env.SEARCH_RATE_LIMIT_MAX) || 1200, // configurable por env
   message: {
     success: false,
     message: 'Demasiadas búsquedas. Por favor espera un momento.'
