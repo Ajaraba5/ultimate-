@@ -60,27 +60,9 @@
         </div>
     </div>
 
-    <!-- Modal de Confirmación -->
-    <div id="confirmModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 id="modalTitle">Confirmar Acción</h2>
-                <button class="modal-close" onclick="closeModal()">&times;</button>
-            </div>
-            <div class="modal-body">
-                <p id="modalMessage"></p>
-                <div style="display: flex; gap: 10px; margin-top: 20px;">
-                    <button class="btn btn-success" id="modalConfirmBtn" onclick="confirmAction()">✅ Confirmar</button>
-                    <button class="btn btn-secondary" onclick="closeModal()">❌ Cancelar</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <script>
         const API_URL = window.location.origin;
         let socket = null;
-        let currentAction = null;
         let isSubmittingAction = false;
 
         window.addEventListener('load', async () => {
@@ -129,7 +111,7 @@
                             <td>${persona.documento}</td>
                             <td>
                                 ${!persona.voto 
-                                    ? `<button class="btn btn-success" onclick="mostrarConfirmacionMarcar(${persona.id}, '${persona.documento}')">✅ Marcar Voto</button>`
+                                    ? `<button class="btn btn-success" onclick="marcarVoto(${persona.id})">✅ Marcar Voto</button>`
                                     : `<span class="badge badge-success">✅ Votó</span>`}
                             </td>
                         </tr>
@@ -140,43 +122,26 @@
             }
         }
 
-        function mostrarConfirmacionMarcar(personaId, nombre) {
-            document.getElementById('modalTitle').textContent = 'Marcar Voto';
-            document.getElementById('modalMessage').textContent = `¿Confirmas que el documento ${nombre} ya votó?`;
-            document.getElementById('confirmModal').classList.add('active');
-
-            currentAction = {
-                type: 'marcar',
-                personaId: personaId,
-                nombre: nombre
-            };
-        }
-
-        async function confirmAction() {
-            if (!currentAction || isSubmittingAction) return;
+        async function marcarVoto(personaId) {
+            if (isSubmittingAction) return;
 
             const endpoint = '/api/contador/marcar-voto';
-
-            const actionSnapshot = { ...currentAction };
-            const confirmBtn = document.getElementById('modalConfirmBtn');
             isSubmittingAction = true;
-            confirmBtn.disabled = true;
 
             try {
                 const response = await apiCall(endpoint, {
                     method: 'POST',
-                    body: JSON.stringify({ personaId: actionSnapshot.personaId })
+                    body: JSON.stringify({ personaId })
                 });
 
                 const message = String(response?.message || '').toLowerCase();
                 const alreadyInExpectedState = message.includes('ya votó');
 
                 if (response.success || alreadyInExpectedState) {
-                    closeModal();
                     await loadMisPersonas();
 
                     if (socket && socket.connected) {
-                        socket.emit('voto-marcado', { personaId: actionSnapshot.personaId });
+                        socket.emit('voto-marcado', { personaId });
                     }
 
                     alert('✅ Voto marcado exitosamente!');
@@ -188,13 +153,7 @@
                 alert('❌ Error al procesar la acción');
             } finally {
                 isSubmittingAction = false;
-                confirmBtn.disabled = false;
             }
-        }
-
-        function closeModal() {
-            document.getElementById('confirmModal').classList.remove('active');
-            currentAction = null;
         }
 
         function initializeWebSocket() {
