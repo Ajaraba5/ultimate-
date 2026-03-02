@@ -127,6 +127,12 @@
 
             const endpoint = '/api/contador/marcar-voto';
             isSubmittingAction = true;
+            const originalButtonText = buttonElement ? buttonElement.innerHTML : '';
+
+            if (buttonElement) {
+                buttonElement.disabled = true;
+                buttonElement.innerHTML = '⏳ Marcando...';
+            }
 
             try {
                 const response = await apiCall(endpoint, {
@@ -138,25 +144,33 @@
                 const alreadyInExpectedState = message.includes('ya votó');
 
                 if (response.success || alreadyInExpectedState) {
-                    const actionCell = buttonElement?.closest('td');
                     const row = buttonElement?.closest('tr');
-
-                    if (actionCell) {
-                        actionCell.innerHTML = '<span class="badge badge-success">✅ Votó</span>';
-                    }
+                    const tbody = document.getElementById('personasTableBody');
 
                     if (row) {
-                        row.style.background = '#E8F8F5';
+                        row.remove();
+                    }
+
+                    if (tbody && tbody.children.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="2" class="text-center">No hay documentos</td></tr>';
                     }
 
                     if (socket && socket.connected) {
                         socket.emit('voto-marcado', { personaId });
                     }
                 } else {
+                    if (buttonElement) {
+                        buttonElement.disabled = false;
+                        buttonElement.innerHTML = originalButtonText;
+                    }
                     alert(`❌ ${response.message}`);
                 }
             } catch (error) {
                 console.error('Error:', error);
+                if (buttonElement) {
+                    buttonElement.disabled = false;
+                    buttonElement.innerHTML = originalButtonText;
+                }
                 alert('❌ Error al procesar la acción');
             } finally {
                 isSubmittingAction = false;
