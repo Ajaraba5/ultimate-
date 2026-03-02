@@ -120,8 +120,8 @@ const exportLimiter = rateLimit({
  * Rate limiter para operaciones de votación
  */
 const votingLimiter = rateLimit({
-  windowMs: 1 * 60 * 1000, // 1 minuto
-  max: 60, // 60 votos por minuto (1 por segundo promedio)
+  windowMs: parseInt(process.env.VOTING_RATE_LIMIT_WINDOW_MS) || 1 * 60 * 1000, // 1 minuto por defecto
+  max: parseInt(process.env.VOTING_RATE_LIMIT_MAX) || 240, // configurable por env
   message: {
     success: false,
     message: 'Demasiados votos registrados muy rápido. Reduce la velocidad.'
@@ -135,8 +135,8 @@ const votingLimiter = rateLimit({
  * Rate limiter para búsquedas
  */
 const searchLimiter = rateLimit({
-  windowMs: 1 * 60 * 1000, // 1 minuto
-  max: 30, // 30 búsquedas por minuto
+  windowMs: parseInt(process.env.SEARCH_RATE_LIMIT_WINDOW_MS) || 1 * 60 * 1000, // 1 minuto por defecto
+  max: parseInt(process.env.SEARCH_RATE_LIMIT_MAX) || 300, // configurable por env
   message: {
     success: false,
     message: 'Demasiadas búsquedas. Por favor espera un momento.'

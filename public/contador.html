@@ -111,7 +111,7 @@
                             <td>${persona.documento}</td>
                             <td>
                                 ${!persona.voto 
-                                    ? `<button class="btn btn-success" onclick="marcarVoto(${persona.id})">✅ Marcar Voto</button>`
+                                    ? `<button class="btn btn-success" onclick="marcarVoto(${persona.id}, this)">✅ Marcar Voto</button>`
                                     : `<span class="badge badge-success">✅ Votó</span>`}
                             </td>
                         </tr>
@@ -122,7 +122,7 @@
             }
         }
 
-        async function marcarVoto(personaId) {
+        async function marcarVoto(personaId, buttonElement) {
             if (isSubmittingAction) return;
 
             const endpoint = '/api/contador/marcar-voto';
@@ -138,7 +138,16 @@
                 const alreadyInExpectedState = message.includes('ya votó');
 
                 if (response.success || alreadyInExpectedState) {
-                    await loadMisPersonas();
+                    const actionCell = buttonElement?.closest('td');
+                    const row = buttonElement?.closest('tr');
+
+                    if (actionCell) {
+                        actionCell.innerHTML = '<span class="badge badge-success">✅ Votó</span>';
+                    }
+
+                    if (row) {
+                        row.style.background = '#E8F8F5';
+                    }
 
                     if (socket && socket.connected) {
                         socket.emit('voto-marcado', { personaId });
