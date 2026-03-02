@@ -143,8 +143,6 @@
                     if (socket && socket.connected) {
                         socket.emit('voto-marcado', { personaId });
                     }
-
-                    alert('✅ Voto marcado exitosamente!');
                 } else {
                     alert(`❌ ${response.message}`);
                 }
