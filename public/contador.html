@@ -31,7 +31,7 @@
                 <div class="row mb-2">
                     <div class="col-12">
                         <div class="input-group">
-                            <input type="text" id="searchInput" placeholder="Buscar por documento...">
+                            <input type="text" id="searchInput" placeholder="Buscar por cédula...">
                             <button class="btn btn-primary" onclick="loadMisPersonas()">🔍 Buscar</button>
                         </div>
                     </div>
@@ -39,7 +39,7 @@
 
                 <!-- Desmarcar información -->
                 <div class="alert alert-info mb-2">
-                    💡 <strong>Importante:</strong> Solo se muestra el documento. Usa el botón "Marcar Voto" para registrar que la persona ya votó.
+                    💡 <strong>Importante:</strong> Busca por cédula y marca voto desde la tabla.
                 </div>
 
                 <!-- Tabla de Personas -->
@@ -47,12 +47,14 @@
                     <table>
                         <thead>
                             <tr>
-                                <th>Documento</th>
+                                <th>Cédula</th>
+                                <th>Lugar de Votación</th>
+                                <th>Mesa</th>
                                 <th>Acción</th>
                             </tr>
                         </thead>
                         <tbody id="personasTableBody">
-                            <tr><td colspan="2" class="text-center">Cargando documentos...</td></tr>
+                            <tr><td colspan="4" class="text-center">Cargando datos...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -69,6 +71,12 @@
             await checkAuth();
             await loadMisPersonas();
             initializeWebSocket();
+
+            document.getElementById('searchInput').addEventListener('keydown', (event) => {
+                if (event.key === 'Enter') {
+                    loadMisPersonas();
+                }
+            });
         });
 
         async function checkAuth() {
@@ -102,13 +110,15 @@
                     const tbody = document.getElementById('personasTableBody');
                     
                     if (response.data.length === 0) {
-                        tbody.innerHTML = '<tr><td colspan="2" class="text-center">No hay documentos</td></tr>';
+                        tbody.innerHTML = '<tr><td colspan="4" class="text-center">No se encontraron votantes</td></tr>';
                         return;
                     }
 
                     tbody.innerHTML = response.data.map(persona => `
                         <tr style="${persona.voto ? 'background: #E8F8F5;' : ''}">
                             <td>${persona.documento}</td>
+                            <td>${persona.lugar_votacion_nombre || '-'}</td>
+                            <td>${persona.mesa || '-'}</td>
                             <td>
                                 ${!persona.voto 
                                     ? `<button class="btn btn-success" onclick="marcarVoto(${persona.id}, this)">✅ Marcar Voto</button>`
@@ -152,7 +162,7 @@
                     }
 
                     if (tbody && tbody.children.length === 0) {
-                        tbody.innerHTML = '<tr><td colspan="2" class="text-center">No hay documentos</td></tr>';
+                        tbody.innerHTML = '<tr><td colspan="4" class="text-center">No se encontraron votantes</td></tr>';
                     }
 
                     if (socket && socket.connected) {
