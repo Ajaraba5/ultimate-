@@ -130,6 +130,7 @@
                                     <th>Dirección</th>
                                     <th>Barrio</th>
                                     <th>Puesto Votación</th>
+                                    <th>Mesa</th>
                                     <th>Partido</th>
                                     <th>Líder</th>
                                     <th>Registrador</th>
@@ -137,7 +138,7 @@
                                 </tr>
                             </thead>
                             <tbody id="personasTableBody">
-                                <tr><td colspan="10" class="text-center">Cargando...</td></tr>
+                                <tr><td colspan="11" class="text-center">Cargando...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -550,6 +551,7 @@
                             <td style="max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${p.direccion || '-'}">${p.direccion || '-'}</td>
                             <td>${p.zona_nombre || '-'}</td>
                             <td>${p.lugar_votacion_nombre || '-'}</td>
+                            <td>${p.mesa || '-'}</td>
                             <td><span class="badge ${p.partido === 'ROJO' ? 'badge-danger' : 'badge-success'}">${p.partido}</span></td>
                             <td>${p.lider_nombre || '-'}</td>
                             <td>
@@ -559,7 +561,7 @@
                             </td>
                             <td>${p.voto ? '<span class="badge badge-success">Votó</span>' : '<span class="badge badge-danger">Pendiente</span>'}</td>
                         </tr>
-                    `}).join('') || '<tr><td colspan="10" class="text-center">No hay resultados</td></tr>';
+                    `}).join('') || '<tr><td colspan="11" class="text-center">No hay resultados</td></tr>';
                 }
             } catch (error) {
                 console.error('Error loading personas:', error);
