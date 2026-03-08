@@ -34,15 +34,17 @@ async function getMisPersonas(req, res) {
     let paramIndex = 1;
     
     if (trimmedSearch) {
-      // If input looks like a cedula, force exact match (ignoring punctuation).
       const normalizedCedula = trimmedSearch.replace(/\D/g, '');
+
       if (normalizedCedula.length > 0) {
-        params.push(normalizedCedula);
-        queryText += ` AND regexp_replace(COALESCE(p.documento, ''), '[^0-9]', '', 'g') = $${paramIndex}`;
+        // Use normalized partial match to survive imported values like "12345.0".
+        params.push(`%${normalizedCedula}%`);
+        queryText += ` AND regexp_replace(COALESCE(p.documento, ''), '[^0-9]', '', 'g') LIKE $${paramIndex}`;
       } else {
         params.push(`%${trimmedSearch}%`);
         queryText += ` AND (p.nombre ILIKE $${paramIndex} OR p.documento ILIKE $${paramIndex})`;
       }
+
       paramIndex++;
     }
 
