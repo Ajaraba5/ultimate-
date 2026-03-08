@@ -104,6 +104,8 @@
 
                 const params = new URLSearchParams();
                 if (search) params.append('search', search);
+                // Quick safety: contador search should only return pending voters.
+                params.append('voto', 'false');
 
                 const response = await apiCall(`/api/contador/personas?${params}`);
                 if (response.success) {
