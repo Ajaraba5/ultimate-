@@ -48,12 +48,12 @@ async function getMisPersonas(req, res) {
       paramIndex++;
     }
 
-    // In contador panel default to pending voters to avoid accidental confusion.
+    // In contador panel default to pending voters, except when searching by cedula.
     if (voto !== undefined) {
       params.push(voto === 'true');
       queryText += ` AND p.voto = $${paramIndex}`;
       paramIndex++;
-    } else {
+    } else if (!trimmedSearch) {
       queryText += ` AND p.voto = false`;
     }
     
