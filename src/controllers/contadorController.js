@@ -10,8 +10,12 @@ const { query } = require('../config/database');
  */
 async function getMisPersonas(req, res) {
   try {
-    const { search, voto, limit = 100, offset = 0 } = req.query;
+    const { search, voto, limit = 500, offset = 0 } = req.query;
     const trimmedSearch = String(search || '').trim();
+    const parsedLimit = Number.parseInt(limit, 10);
+    const parsedOffset = Number.parseInt(offset, 10);
+    const safeLimit = Number.isFinite(parsedLimit) ? Math.min(Math.max(parsedLimit, 1), 1000) : 500;
+    const safeOffset = Number.isFinite(parsedOffset) ? Math.max(parsedOffset, 0) : 0;
     
     let queryText = `
       SELECT 
@@ -31,8 +35,9 @@ async function getMisPersonas(req, res) {
     
     if (trimmedSearch) {
       // If input looks like a cedula, force exact match (ignoring punctuation).
-      if (/^\d+$/.test(trimmedSearch)) {
-        params.push(trimmedSearch);
+      const normalizedCedula = trimmedSearch.replace(/\D/g, '');
+      if (normalizedCedula.length > 0) {
+        params.push(normalizedCedula);
         queryText += ` AND regexp_replace(COALESCE(p.documento, ''), '[^0-9]', '', 'g') = $${paramIndex}`;
       } else {
         params.push(`%${trimmedSearch}%`);
@@ -51,7 +56,7 @@ async function getMisPersonas(req, res) {
     }
     
     queryText += ` ORDER BY p.voto ASC, p.nombre ASC LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
-    params.push(limit, offset);
+    params.push(safeLimit, safeOffset);
     
     const result = await query(queryText, params);
     
