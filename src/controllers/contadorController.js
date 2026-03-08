@@ -11,6 +11,7 @@ const { query } = require('../config/database');
 async function getMisPersonas(req, res) {
   try {
     const { search, voto, limit = 100, offset = 0 } = req.query;
+    const trimmedSearch = String(search || '').trim();
     
     let queryText = `
       SELECT 
@@ -28,16 +29,25 @@ async function getMisPersonas(req, res) {
     const params = [];
     let paramIndex = 1;
     
-    if (search) {
-      params.push(`%${search}%`);
-      queryText += ` AND (p.nombre ILIKE $${paramIndex} OR p.documento ILIKE $${paramIndex})`;
+    if (trimmedSearch) {
+      // If input looks like a cedula, force exact match (ignoring punctuation).
+      if (/^\d+$/.test(trimmedSearch)) {
+        params.push(trimmedSearch);
+        queryText += ` AND regexp_replace(COALESCE(p.documento, ''), '[^0-9]', '', 'g') = $${paramIndex}`;
+      } else {
+        params.push(`%${trimmedSearch}%`);
+        queryText += ` AND (p.nombre ILIKE $${paramIndex} OR p.documento ILIKE $${paramIndex})`;
+      }
       paramIndex++;
     }
-    
+
+    // In contador panel default to pending voters to avoid accidental confusion.
     if (voto !== undefined) {
       params.push(voto === 'true');
       queryText += ` AND p.voto = $${paramIndex}`;
       paramIndex++;
+    } else {
+      queryText += ` AND p.voto = false`;
     }
     
     queryText += ` ORDER BY p.voto ASC, p.nombre ASC LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
